@@ -1,0 +1,22 @@
+language: go
+sudo: false
+install: true
+os:
+  - linux
+  - osx
+go:
+  - 1.5.3
+  - 1.6
+  - tip
+env:
+  global:
+    - GO15VENDOREXPERIMENT=1
+  matrix:
+    - GOARCH=amd64
+    - GOARCH=386
+script:
+  - go test -x ./tranor
+  - ./check-fmt.sh
+matrix:
+  allow_failures:
+    - go: tip

@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "ZxzYc1JwJ3U6kZbw/KGuPko5lSY=",
+			"path": "github.com/howeyc/fsnotify",
+			"revision": "f0c08ee9c60704c1879025f2ae0ff3e000082c13",
+			"revisionTime": "2015-10-03T19:46:02Z"
+		},
+		{
 			"path": "github.com/kardianos/osext",
 			"revision": "29ae4ffbc9a6fe9fb2bc5029050ce6996ea1d3bc",
 			"revisionTime": "2015-12-22T07:32:29-08:00"
@@ -13,9 +19,11 @@
 			"revisionTime": "2013-12-21T12:05:32-08:00"
 		},
 		{
+			"checksumSHA1": "ND36F6pc3iBYhsU4xw7vsX/sBQM=",
+			"origin": "github.com/ef-ctx/tsuru-flow/vendor/github.com/tsuru/config",
 			"path": "github.com/tsuru/config",
-			"revision": "d1ffd8ab26d621bc42c3580f6c9a97007aba7dad",
-			"revisionTime": "2016-02-17T21:02:32-02:00"
+			"revision": "8fe001de4470949b4854212bf4badb4251866774",
+			"revisionTime": "2016-02-26T03:34:52Z"
 		},
 		{
 			"path": "github.com/tsuru/gnuflag",
@@ -67,5 +75,6 @@
 			"revision": "9f9df34309c04878acc86042b16630b0f696e1de",
 			"revisionTime": "2014-09-24T13:16:07-03:00"
 		}
-	]
+	],
+	"rootPath": "github.com/ef-ctx/tsuru-flow"
 }

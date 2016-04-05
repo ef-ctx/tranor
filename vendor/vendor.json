@@ -19,6 +19,12 @@
 			"revisionTime": "2013-12-21T12:05:32-08:00"
 		},
 		{
+			"checksumSHA1": "aotJFikxVJTiE9CEkVvMYshYtwc=",
+			"path": "github.com/sajari/fuzzy",
+			"revision": "32e027c1cb8f7545f38f14540b5004afcad0afb8",
+			"revisionTime": "2016-01-06T11:43:15Z"
+		},
+		{
 			"checksumSHA1": "ND36F6pc3iBYhsU4xw7vsX/sBQM=",
 			"origin": "github.com/ef-ctx/tsuru-flow/vendor/github.com/tsuru/config",
 			"path": "github.com/tsuru/config",

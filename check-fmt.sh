@@ -12,7 +12,6 @@ if [ -n "${files}" ]; then
 	echo $(echo ${files} | sed 's/^/- /')
 fi
 
-go get golang.org/x/tools/cmd/vet
 go vet $pkgs
 
 go get github.com/golang/lint/golint

@@ -4,16 +4,11 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-pkgs=$(go list ./... | grep -v vendor | sed 's;github.com/ef-ctx/tsuru-flow/;./;')
+pkgs=$(go list ./... | grep -v vendor | sed 's;github.com/ef-ctx/tranor;.;')
 
-files=$(gofmt -s -l $pkgs)
-if [ -n "${files}" ]; then
-	echo "gofmt -s -w required for:"
-	echo $(echo ${files} | sed 's/^/- /')
-fi
+test -z "$(gofmt -s -l $pkgs | grep -v vendor/ | tee /dev/stderr)"
 
 go vet $pkgs
-
 go get github.com/golang/lint/golint
 golint $pkgs
 

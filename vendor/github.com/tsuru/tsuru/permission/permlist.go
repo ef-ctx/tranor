@@ -32,6 +32,7 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 	"app.update.cname.remove",
 	"app.update.plan",
 	"app.update.bind",
+	"app.update.events",
 	"app.update.unbind",
 	"app.deploy",
 	"app.deploy.archive-url",
@@ -43,6 +44,7 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 	"app.read",
 	"app.read.deploy",
 	"app.read.env",
+	"app.read.events",
 	"app.read.metric",
 	"app.read.log",
 	"app.delete",
@@ -64,6 +66,8 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 	"machine.create",
 	"machine.delete",
 	"machine.read",
+	"machine.update.events",
+	"machine.read.events",
 	"machine.template.create",
 	"machine.template.delete",
 	"machine.template.update",
@@ -73,12 +77,20 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 ).addWithCtx(
 	"team.create", []contextType{},
 ).add(
+	"team.read.events",
 	"team.delete",
+	"team.update.events",
 ).add(
 	"user.create",
 	"user.delete",
+	"user.read.events",
 	"user.update.token",
+	"user.update.events",
 	"user.update.quota",
+	"user.update.password",
+	"user.update.reset",
+	"user.update.key.add",
+	"user.update.key.remove",
 ).addWithCtx(
 	"service", []contextType{CtxService, CtxTeam},
 ).addWithCtx(
@@ -86,7 +98,9 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 ).add(
 	"service.read.doc",
 	"service.read.plans",
+	"service.read.events",
 	"service.update.proxy",
+	"service.update.events",
 	"service.update.revoke-access",
 	"service.update.grant-access",
 	"service.update.doc",
@@ -96,8 +110,10 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 ).addWithCtx(
 	"service-instance.create", []contextType{CtxTeam},
 ).add(
+	"service-instance.read.events",
 	"service-instance.read.status",
 	"service-instance.delete",
+	"service-instance.update.events",
 	"service-instance.update.proxy",
 	"service-instance.update.bind",
 	"service-instance.update.unbind",
@@ -107,8 +123,12 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 ).add(
 	"role.create",
 	"role.delete",
+	"role.read.events",
+	"role.update.events",
 	"role.update.assign",
 	"role.update.dissociate",
+	"role.update.permission.add",
+	"role.update.permission.remove",
 	"role.default.create",
 	"role.default.delete",
 ).add(
@@ -123,6 +143,8 @@ var PermissionRegistry = (&registry{}).addWithCtx(
 ).addWithCtx(
 	"pool.create", []contextType{},
 ).add(
+	"pool.read.events",
+	"pool.update.events",
 	"pool.update.logs",
 	"pool.delete",
 ).add(

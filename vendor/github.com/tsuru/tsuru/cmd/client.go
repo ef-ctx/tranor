@@ -1,4 +1,4 @@
-// Copyright 2015 tsuru authors. All rights reserved.
+// Copyright 2016 tsuru authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -54,7 +54,7 @@ func (c *Client) detectClientError(err error) error {
 }
 
 func (c *Client) Do(request *http.Request) (*http.Response, error) {
-	if token, err := ReadToken(); err == nil {
+	if token, err := ReadToken(); err == nil && token != "" {
 		request.Header.Set("Authorization", "bearer "+token)
 	}
 	request.Close = true

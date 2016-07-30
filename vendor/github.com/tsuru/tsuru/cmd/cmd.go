@@ -13,9 +13,9 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 
+	goVersion "github.com/hashicorp/go-version"
 	"github.com/sajari/fuzzy"
 	"github.com/tsuru/gnuflag"
 	"github.com/tsuru/tsuru/errors"
@@ -29,6 +29,10 @@ var (
 	// ErrLookup is the error that should be returned by lookup functions when it
 	// cannot find a matching command for the given parameters.
 	ErrLookup = stderrors.New("lookup error - command not found")
+)
+
+const (
+	loginCmdName = "login"
 )
 
 type exiter interface {
@@ -105,15 +109,15 @@ func (m *Manager) RegisterDeprecated(command Command, oldName string) {
 }
 
 type RemovedCommand struct {
-	name string
-	help string
+	Name string
+	Help string
 }
 
 func (c *RemovedCommand) Info() *Info {
 	return &Info{
-		Name:  c.name,
-		Usage: c.name,
-		Desc:  fmt.Sprintf("This command was removed. %s", c.help),
+		Name:  c.Name,
+		Usage: c.Name,
+		Desc:  fmt.Sprintf("This command was removed. %s", c.Help),
 		fail:  true,
 	}
 }
@@ -130,7 +134,7 @@ func (m *Manager) RegisterRemoved(name string, help string) {
 	if found {
 		panic(fmt.Sprintf("command already registered: %s", name))
 	}
-	m.Commands[name] = &RemovedCommand{name: name, help: help}
+	m.Commands[name] = &RemovedCommand{Name: name, Help: help}
 }
 
 func (m *Manager) RegisterTopic(name, content string) {
@@ -231,8 +235,7 @@ func (m *Manager) Run(args []string) {
 	client := NewClient(net.Dial5FullUnlimitedClient, context, m)
 	client.Verbosity = verbosity
 	err = command.Run(context, client)
-	if err == errUnauthorized && name != "login" {
-		loginCmdName := "login"
+	if err == errUnauthorized && name != loginCmdName {
 		if cmd, ok := m.Commands[loginCmdName]; ok {
 			fmt.Fprintln(m.stderr, "Error: you're not authenticated or your session has expired.")
 			fmt.Fprintf(m.stderr, "Calling the %q command...\n", loginCmdName)
@@ -246,8 +249,8 @@ func (m *Manager) Run(args []string) {
 	if err != nil {
 		errorMsg := err.Error()
 		httpErr, ok := err.(*errors.HTTP)
-		if ok && httpErr.Code == http.StatusUnauthorized && name != "login" {
-			errorMsg = `You're not authenticated or your session has expired. Please use "login" command for authentication.`
+		if ok && httpErr.Code == http.StatusUnauthorized && name != loginCmdName {
+			errorMsg = fmt.Sprintf(`You're not authenticated or your session has expired. Please use %q command for authentication.`, loginCmdName)
 		}
 		if !strings.HasSuffix(errorMsg, "\n") {
 			errorMsg += "\n"
@@ -503,39 +506,16 @@ func filesystem() fs.Fs {
 // validateVersion checks whether current version is greater or equal to
 // supported version.
 func validateVersion(supported, current string) bool {
-	var (
-		bigger bool
-		limit  int
-	)
-	if supported == "" || supported == current {
+	if supported == "" {
 		return true
 	}
-	partsSupported := strings.Split(supported, ".")
-	partsCurrent := strings.Split(current, ".")
-	if len(partsSupported) > len(partsCurrent) {
-		limit = len(partsCurrent)
-		bigger = true
-	} else {
-		limit = len(partsSupported)
-	}
-	for i := 0; i < limit; i++ {
-		current, err := strconv.Atoi(partsCurrent[i])
-		if err != nil {
-			return false
-		}
-		supported, err := strconv.Atoi(partsSupported[i])
-		if err != nil {
-			return false
-		}
-		if current < supported {
-			return false
-		}
-		if current > supported {
-			return true
-		}
-	}
-	if bigger {
+	vSupported, err := goVersion.NewVersion(supported)
+	if err != nil {
 		return false
 	}
-	return true
+	vCurrent, err := goVersion.NewVersion(current)
+	if err != nil {
+		return false
+	}
+	return vCurrent.Compare(vSupported) >= 0
 }

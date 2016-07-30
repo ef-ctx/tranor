@@ -46,7 +46,7 @@ func healthCheck() error {
 	return conn.Apps().Database.Session.Ping()
 }
 
-func dbConfig(prefix string) (string, string) {
+func DbConfig(prefix string) (string, string) {
 	url, _ := config.GetString(fmt.Sprintf("database:%surl", prefix))
 	if url == "" {
 		url, _ = config.GetString("database:url")
@@ -73,7 +73,7 @@ func Conn() (*Storage, error) {
 		strg Storage
 		err  error
 	)
-	url, dbname := dbConfig("")
+	url, dbname := DbConfig("")
 	strg.Storage, err = storage.Open(url, dbname)
 	return &strg, err
 }
@@ -83,7 +83,7 @@ func LogConn() (*LogStorage, error) {
 		strg LogStorage
 		err  error
 	)
-	url, dbname := dbConfig("logdb-")
+	url, dbname := DbConfig("logdb-")
 	strg.Storage, err = storage.Open(url, dbname)
 	return &strg, err
 }
@@ -93,13 +93,6 @@ func (s *Storage) Apps() *storage.Collection {
 	nameIndex := mgo.Index{Key: []string{"name"}, Unique: true}
 	c := s.Collection("apps")
 	c.EnsureIndex(nameIndex)
-	return c
-}
-
-func (s *Storage) Deploys() *storage.Collection {
-	timestampIndex := mgo.Index{Key: []string{"-timestamp"}}
-	c := s.Collection("deploys")
-	c.EnsureIndex(timestampIndex)
 	return c
 }
 
@@ -211,4 +204,17 @@ func (s *LogStorage) LogsCollections() ([]*storage.Collection, error) {
 
 func (s *Storage) Roles() *storage.Collection {
 	return s.Collection("roles")
+}
+
+func (s *Storage) Limiter() *storage.Collection {
+	return s.Collection("limiter")
+}
+
+func (s *Storage) Events() *storage.Collection {
+	ownerIndex := mgo.Index{Key: []string{"owner"}}
+	kindIndex := mgo.Index{Key: []string{"kind"}}
+	c := s.Collection("events")
+	c.EnsureIndex(ownerIndex)
+	c.EnsureIndex(kindIndex)
+	return c
 }

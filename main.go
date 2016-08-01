@@ -13,11 +13,12 @@ import (
 const version = "0.1"
 
 func buildManager(name string) *cmd.Manager {
-	return cmd.BuildBaseManager(name, version, "", nil)
+	mngr := cmd.BuildBaseManager(name, version, "", nil)
+	mngr.Register(envList{})
+	return mngr
 }
 
 func main() {
 	name := cmd.ExtractProgramName(os.Args[0])
-	manager := buildManager(name)
-	manager.Run(os.Args[1:])
+	buildManager(name).Run(os.Args[1:])
 }

@@ -1,0 +1,20 @@
+{
+	"envs": [
+		{
+			"name": "dev",
+			"dnsSuffix": "dev.example.com"
+		},
+		{
+			"name": "qa",
+			"dnsSuffix": "qa.example.com"
+		},
+		{
+			"name": "stage",
+			"dnsSuffix": "stage.example.com"
+		},
+		{
+			"name": "production",
+			"dnsSuffix": "example.com"
+		}
+	]
+}

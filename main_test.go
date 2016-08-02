@@ -24,3 +24,14 @@ func TestBaseCommandsAreRegistered(t *testing.T) {
 		}
 	}
 }
+
+func TestEnvListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["env-list"]
+	if !ok {
+		t.Error("command env-list not found")
+	}
+	if _, ok := gotCommand.(envList); !ok {
+		t.Errorf("command %#v is not of type envList{}", gotCommand)
+	}
+}

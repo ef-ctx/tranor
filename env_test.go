@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -116,5 +117,58 @@ func TestLoadConfigFileNotConfigured(t *testing.T) {
 	}
 	if !os.IsNotExist(err) {
 		t.Errorf("got unexpected error: %#v", err)
+	}
+}
+
+func TestWriteConfigFile(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	expectedContent := "some content"
+	err = writeConfigFile(bytes.NewReader([]byte(expectedContent)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullPath := filepath.Join(dir, ".tranor", "config.json")
+	content, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != expectedContent {
+		t.Errorf("wrong content in the config file.\nWant %q\nGot  %q", expectedContent, content)
+	}
+}
+
+func TestWriteConfigFileErrorToCreateFile(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	os.MkdirAll(filepath.Join(dir, ".tranor", "config.json"), 0755)
+	err = writeConfigFile(bytes.NewReader([]byte("something")))
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestWriteConfigFileErrorToCreateDirectory(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	err = os.Chmod(dir, 0555)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = writeConfigFile(bytes.NewReader([]byte("something")))
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
 	}
 }

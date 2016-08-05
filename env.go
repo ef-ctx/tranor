@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -58,4 +59,19 @@ func loadConfigFile() (*Config, error) {
 	var config Config
 	err = json.NewDecoder(f).Decode(&config)
 	return &config, err
+}
+
+func writeConfigFile(r io.Reader) error {
+	dir := filepath.Join(os.Getenv("HOME"), ".tranor")
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(filepath.Join(dir, "config.json"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = io.Copy(f, r)
+	return err
 }

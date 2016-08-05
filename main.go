@@ -12,9 +12,15 @@ import (
 
 const version = "0.1"
 
+var baseCommandsToRemove = []string{"target-add", "target-list", "target-remove", "target-set"}
+
 func buildManager(name string) *cmd.Manager {
 	mngr := cmd.BuildBaseManager(name, version, "", nil)
+	for _, c := range baseCommandsToRemove {
+		delete(mngr.Commands, c)
+	}
 	mngr.Register(envList{})
+	mngr.Register(targetSet{})
 	return mngr
 }
 

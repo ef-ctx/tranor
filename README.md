@@ -27,15 +27,15 @@ the list of environment names and DNS suffixes, in the following format:
 	"envs": [
 		{
 			"name": "dev",
-			"dnsSuffix": "dev.example.com",
+			"dnsSuffix": "dev.example.com"
 		},
 		{
 			"name": "stage",
-			"dnsSuffix": "stage.example.com",
+			"dnsSuffix": "stage.example.com"
 		},
 		{
 			"name": "production",
-			"dnsSuffix": "example.com",
+			"dnsSuffix": "example.com"
 		}
 	]
 }

@@ -85,6 +85,29 @@ func TestTargetSetRun(t *testing.T) {
 	}
 }
 
+func TestTargetSetRunFailure(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+	}))
+	defer server.Close()
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{
+		Args:   []string{server.URL},
+		Stdout: &stdout,
+		Stderr: &stderr,
+	}
+	err = targetSet{}.Run(&ctx, nil)
+	if err == nil {
+		t.Fatal("got unexpected <nil> error")
+	}
+}
+
 func TestDownloadConfiguration(t *testing.T) {
 	config := `{"target":"http://mytarget.example.com","envs":[]}`
 	var req http.Request
@@ -116,6 +139,26 @@ func TestDownloadConfiguration(t *testing.T) {
 	}
 	if req.URL.Path != "/config.json" {
 		t.Errorf("wrong path in request. Want %q. Got %q", "/config.json", req.URL.Path)
+	}
+}
+
+func TestDownloadConfigurationInvalidConfig(t *testing.T) {
+	var req http.Request
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		req = *r
+		w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	err = downloadConfiguration(server.URL)
+	expectedMsg := "invalid configuration returned by the remote target: invalid character 'i' looking for beginning of value"
+	if err.Error() != expectedMsg {
+		t.Errorf("invalid error message.\nWant %q\nGot %q", expectedMsg, err.Error())
 	}
 }
 

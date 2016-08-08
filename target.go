@@ -42,7 +42,7 @@ func downloadConfiguration(server string) error {
 	}
 	config, err := parseConfig(resp.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid configuration returned by the remote target: %s", err)
 	}
 	err = writeConfigFile(config)
 	if err != nil {

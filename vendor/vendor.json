@@ -91,10 +91,10 @@
 			"revisionTime": "2016-07-29T15:22:29Z"
 		},
 		{
-			"checksumSHA1": "987rql+7rwT8VfK0UPx7sZf8Onk=",
+			"checksumSHA1": "HYnvtzYemxDteYI8KdzeQcnhf6o=",
 			"path": "github.com/tsuru/tsuru/cmd",
-			"revision": "74f67c5eecbc233ee0c11b99a1318e893a0ce5ec",
-			"revisionTime": "2016-07-29T15:22:29Z"
+			"revision": "08e0de98ba0146c3a58dcdeae67c99bfbec7ccde",
+			"revisionTime": "2016-08-08T13:18:42Z"
 		},
 		{
 			"checksumSHA1": "4HubVPPZb+LnBabmQXybWolOvMM=",

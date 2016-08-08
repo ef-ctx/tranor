@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -90,6 +91,7 @@ func TestLoadConfigFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedConfig := Config{
+		Target: "http://tsuru-api.example.com",
 		Environments: []Environment{
 			{Name: "dev", DNSSuffix: "dev.example.com"},
 			{Name: "qa", DNSSuffix: "qa.example.com"},
@@ -127,18 +129,61 @@ func TestWriteConfigFile(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 	os.Setenv("HOME", dir)
-	expectedContent := "some content"
-	err = writeConfigFile(bytes.NewReader([]byte(expectedContent)))
+	config := Config{
+		Target: "http://mytsuru.example.com",
+		Environments: []Environment{
+			{
+				Name:      "dev",
+				DNSSuffix: "dev.example.com",
+			},
+		},
+	}
+	expectedContent, _ := json.Marshal(config)
+	err = writeConfigFile(&config)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fullPath := filepath.Join(dir, ".tranor", "config.json")
+	fullPath := cmd.JoinWithUserDir(".tranor", "config.json")
 	content, err := ioutil.ReadFile(fullPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(content) != expectedContent {
-		t.Errorf("wrong content in the config file.\nWant %q\nGot  %q", expectedContent, content)
+	expectedContent = append(expectedContent, '\n')
+	if string(content) != string(expectedContent) {
+		t.Errorf("wrong content in the config file.\nWant %s\nGot  %s", expectedContent, content)
+	}
+}
+
+func TestWriteConfigFileDirAlreadyExists(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	config := Config{
+		Target: "http://mytsuru.example.com",
+		Environments: []Environment{
+			{
+				Name:      "dev",
+				DNSSuffix: "dev.example.com",
+			},
+		},
+	}
+	os.Mkdir(filepath.Join(dir, ".tranor"), 0755)
+	expectedContent, _ := json.Marshal(config)
+	err = writeConfigFile(&config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullPath := cmd.JoinWithUserDir(".tranor", "config.json")
+	content, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedContent = append(expectedContent, '\n')
+	if string(content) != string(expectedContent) {
+		t.Errorf("wrong content in the config file.\nWant %s\nGot  %s", expectedContent, content)
 	}
 }
 
@@ -149,8 +194,9 @@ func TestWriteConfigFileErrorToCreateFile(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 	os.Setenv("HOME", dir)
-	os.MkdirAll(filepath.Join(dir, ".tranor", "config.json"), 0755)
-	err = writeConfigFile(bytes.NewReader([]byte("something")))
+	os.MkdirAll(cmd.JoinWithUserDir(".tranor", "config.json", "this-is-a-dir"), 0755)
+	config := Config{Target: "something"}
+	err = writeConfigFile(&config)
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
@@ -167,7 +213,7 @@ func TestWriteConfigFileErrorToCreateDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = writeConfigFile(bytes.NewReader([]byte("something")))
+	err = writeConfigFile(&Config{})
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/tsuru/tsuru/cmd"
@@ -30,12 +29,11 @@ func TestTargetSetInfo(t *testing.T) {
 }
 
 func TestTargetSetRun(t *testing.T) {
+	os.Unsetenv("TSURU_TARGET")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/config.json":
-			w.Write([]byte("configuration"))
-		case "/tsuru-target":
-			w.Write([]byte("target"))
+			w.Write([]byte(`{"target":"mytarget","envs":[]}`))
 		default:
 			http.Error(w, "not found", http.StatusNotFound)
 		}
@@ -58,27 +56,27 @@ func TestTargetSetRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedMsg := "Target successfully defined!\n"
-	expectedTarget := "target"
-	expectedTargets := "tranor\ttarget"
-	expectedConfig := "configuration"
+	expectedTarget := "mytarget"
+	expectedTargets := "tranor\tmytarget\n"
+	expectedConfig := `{"target":"mytarget","envs":[]}` + "\n"
 	if stdout.String() != expectedMsg {
 		t.Errorf("wrong stdout msg.\nWant %q\nGot  %q", expectedMsg, stdout.String())
 	}
-	target, err := ioutil.ReadFile(filepath.Join(dir, ".tsuru", "target"))
+	target, err := cmd.ReadTarget()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(target) != expectedTarget {
 		t.Errorf("wrong target. Want %q. Got %q", expectedTarget, string(target))
 	}
-	targets, err := ioutil.ReadFile(filepath.Join(dir, ".tsuru", "targets"))
+	targets, err := ioutil.ReadFile(cmd.JoinWithUserDir(".tsuru", "targets"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(targets) != expectedTargets {
 		t.Errorf("wrong targets file. Want %q. Got %q", expectedTargets, string(targets))
 	}
-	config, err := ioutil.ReadFile(filepath.Join(dir, ".tranor", "config.json"))
+	config, err := ioutil.ReadFile(cmd.JoinWithUserDir(".tranor", "config.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +86,7 @@ func TestTargetSetRun(t *testing.T) {
 }
 
 func TestDownloadConfiguration(t *testing.T) {
-	config := "some config"
+	config := `{"target":"http://mytarget.example.com","envs":[]}`
 	var req http.Request
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		req = *r
@@ -105,10 +103,11 @@ func TestDownloadConfiguration(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	content, err := ioutil.ReadFile(filepath.Join(dir, ".tranor", "config.json"))
+	content, err := ioutil.ReadFile(cmd.JoinWithUserDir(".tranor", "config.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
+	config += "\n"
 	if string(content) != config {
 		t.Errorf("wrong config written. Want %q. Got %q", config, string(content))
 	}
@@ -147,79 +146,6 @@ func TestDownloadConfigurationNetworkError(t *testing.T) {
 	defer os.RemoveAll(dir)
 	os.Setenv("HOME", dir)
 	err = downloadConfiguration("http://192.0.2.12:66000")
-	if err == nil {
-		t.Error("unexpected <nil> error")
-	}
-}
-
-func TestDownloadTsuruTarget(t *testing.T) {
-	remoteTarget := "http://tsuru.example.com"
-	var req http.Request
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		req = *r
-		w.Write([]byte(remoteTarget))
-	}))
-	defer server.Close()
-	dir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	os.Setenv("HOME", dir)
-	err = downloadTsuruTarget(server.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	target, err := ioutil.ReadFile(filepath.Join(dir, ".tsuru", "target"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(target) != remoteTarget {
-		t.Errorf("wrong target. Want %q. Got %q", remoteTarget, string(target))
-	}
-	targets, err := ioutil.ReadFile(filepath.Join(dir, ".tsuru", "targets"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedTargets := "tranor\t" + remoteTarget
-	if string(targets) != expectedTargets {
-		t.Errorf("wrong targets file. Want %q. Got %q", expectedTargets, string(targets))
-	}
-	if req.Method != "GET" {
-		t.Errorf("wrong method in request. Want %q. Got %q", "GET", req.Method)
-	}
-	if req.URL.Path != "/tsuru-target" {
-		t.Errorf("wrong path in request. Want %q. Got %q", "/tsuru-target", req.URL.Path)
-	}
-}
-
-func TestDownloadTsuruTargetHTTPError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("something went wrong"))
-	}))
-	defer server.Close()
-	dir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	os.Setenv("HOME", dir)
-	err = downloadTsuruTarget(server.URL)
-	expectedMsg := "failed to download server information: 500 - something went wrong"
-	if err.Error() != expectedMsg {
-		t.Errorf("wrong error message\nWant %q\nGot  %q", expectedMsg, err.Error())
-	}
-}
-
-func TestDownloadTsuruTargetNetworkError(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	os.Setenv("HOME", dir)
-	err = downloadTsuruTarget("http://192.0.2.12:66000")
 	if err == nil {
 		t.Error("unexpected <nil> error")
 	}

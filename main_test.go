@@ -56,7 +56,7 @@ func TestEnvListIsRegistered(t *testing.T) {
 	}
 }
 
-func TestTargetSetIsRegistered(t *testing.T) {
+func TestBuiltinTargetSetIsOverwritten(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["target-set"]
 	if !ok {

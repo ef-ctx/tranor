@@ -15,8 +15,10 @@ env:
     - GOARCH=amd64
     - GOARCH=386
 script:
-  - go test
+  - go test -coverprofile=coverage.txt -covermode=atomic
   - ./check-fmt.sh
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 matrix:
   allow_failures:
     - go: tip

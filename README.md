@@ -44,7 +44,7 @@ the list of environment names and DNS suffixes, in the following format:
 ##Contributing and running tests
 
 Contributions are welcome! In order to run tests locally, you need to be have
-Go 1.6+ and run:
+Go 1.6+ (or 1.5 with GO15VENDOREXPERIMENT on) and run:
 
 ```
 % go test

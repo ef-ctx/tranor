@@ -218,3 +218,18 @@ func TestWriteConfigFileErrorToCreateDirectory(t *testing.T) {
 		t.Fatal("unexpected <nil> error")
 	}
 }
+
+func TestConfigEnvNames(t *testing.T) {
+	c := Config{
+		Environments: []Environment{
+			{Name: "dev", DNSSuffix: "dev.example.com"},
+			{Name: "qa", DNSSuffix: "qa.example.com"},
+			{Name: "production", DNSSuffix: "example.com"},
+		},
+	}
+	expectedNames := []string{"dev", "qa", "production"}
+	gotNames := c.envNames()
+	if !reflect.DeepEqual(gotNames, expectedNames) {
+		t.Errorf("wrong env names returned\nwant %#v\ngot  %#v", expectedNames, gotNames)
+	}
+}

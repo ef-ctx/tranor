@@ -44,6 +44,14 @@ type Config struct {
 	Environments []Environment `json:"envs"`
 }
 
+func (c *Config) envNames() []string {
+	names := make([]string, len(c.Environments))
+	for i, env := range c.Environments {
+		names[i] = env.Name
+	}
+	return names
+}
+
 func (c *Config) writeTarget() error {
 	cmd.WriteOnTargetList("tranor", c.Target)
 	return cmd.WriteTarget(c.Target)

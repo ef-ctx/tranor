@@ -102,6 +102,17 @@ func TestTeamRemoveIsRegistered(t *testing.T) {
 	}
 }
 
+func TestPlanListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["plan-list"]
+	if !ok {
+		t.Error("command plan-list not found")
+	}
+	if _, ok := gotCommand.(*client.PlanList); !ok {
+		t.Errorf("command %#v is not of type PlanList{}", gotCommand)
+	}
+}
+
 func TestBuiltinTargetSetIsOverwritten(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["target-set"]

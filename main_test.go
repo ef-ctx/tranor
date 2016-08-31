@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/tsuru/tsuru-client/tsuru/admin"
+	"github.com/tsuru/tsuru-client/tsuru/client"
 	"github.com/tsuru/tsuru/cmd"
 )
 
@@ -65,6 +66,39 @@ func TestPlatformListIsRegistered(t *testing.T) {
 	}
 	if _, ok := gotCommand.(admin.PlatformList); !ok {
 		t.Errorf("command %#v is not of type PlatformList{}", gotCommand)
+	}
+}
+
+func TestTeamListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["team-list"]
+	if !ok {
+		t.Error("command team-list not found")
+	}
+	if _, ok := gotCommand.(*client.TeamList); !ok {
+		t.Errorf("command %#v is not of type TeamList{}", gotCommand)
+	}
+}
+
+func TestTeamCreateIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["team-create"]
+	if !ok {
+		t.Error("command team-create not found")
+	}
+	if _, ok := gotCommand.(*client.TeamCreate); !ok {
+		t.Errorf("command %#v is not of type TeamCreate{}", gotCommand)
+	}
+}
+
+func TestTeamRemoveIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["team-remove"]
+	if !ok {
+		t.Error("command team-remove not found")
+	}
+	if _, ok := gotCommand.(*client.TeamRemove); !ok {
+		t.Errorf("command %#v is not of type TeamRemove{}", gotCommand)
 	}
 }
 

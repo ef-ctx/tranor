@@ -1,4 +1,5 @@
 {
+	"target": "http://tsuru-api.example.com",
 	"envs": [
 		{
 			"name": "dev",

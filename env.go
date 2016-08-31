@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -39,7 +40,13 @@ func (envList) Run(ctx *cmd.Context, _ *cmd.Client) error {
 
 // Config represents the configuration for the tranor command line.
 type Config struct {
+	Target       string        `json:"target"`
 	Environments []Environment `json:"envs"`
+}
+
+func (c *Config) writeTarget() error {
+	cmd.WriteOnTargetList("tranor", c.Target)
+	return cmd.WriteTarget(c.Target)
 }
 
 // Environment represents an environment for deploying projects.
@@ -49,13 +56,31 @@ type Environment struct {
 }
 
 func loadConfigFile() (*Config, error) {
-	filePath := filepath.Join(os.Getenv("HOME"), ".tranor", "config.json")
+	filePath := cmd.JoinWithUserDir(".tranor", "config.json")
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
+	return parseConfig(f)
+}
+
+func parseConfig(r io.Reader) (*Config, error) {
 	var config Config
-	err = json.NewDecoder(f).Decode(&config)
+	err := json.NewDecoder(r).Decode(&config)
 	return &config, err
+}
+
+func writeConfigFile(c *Config) error {
+	dir := cmd.JoinWithUserDir(".tranor")
+	err := os.Mkdir(dir, 0755)
+	if err != nil && !os.IsExist(err) {
+		return err
+	}
+	f, err := os.Create(filepath.Join(dir, "config.json"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewEncoder(f).Encode(c)
 }

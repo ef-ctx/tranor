@@ -7,6 +7,7 @@ package main
 import (
 	"os"
 
+	"github.com/tsuru/tsuru-client/tsuru/admin"
 	"github.com/tsuru/tsuru/cmd"
 )
 
@@ -21,6 +22,7 @@ func buildManager(name string) *cmd.Manager {
 	}
 	mngr.Register(envList{})
 	mngr.Register(targetSet{})
+	mngr.Register(admin.PlatformList{})
 	return mngr
 }
 

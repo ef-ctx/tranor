@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/tsuru/tsuru-client/tsuru/admin"
 	"github.com/tsuru/tsuru/cmd"
 )
 
@@ -53,6 +54,17 @@ func TestEnvListIsRegistered(t *testing.T) {
 	}
 	if _, ok := gotCommand.(envList); !ok {
 		t.Errorf("command %#v is not of type envList{}", gotCommand)
+	}
+}
+
+func TestPlatformListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["platform-list"]
+	if !ok {
+		t.Error("command platform-list not found")
+	}
+	if _, ok := gotCommand.(admin.PlatformList); !ok {
+		t.Errorf("command %#v is not of type PlatformList{}", gotCommand)
 	}
 }
 

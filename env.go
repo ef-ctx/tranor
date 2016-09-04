@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -61,6 +62,10 @@ func (c *Config) writeTarget() error {
 type Environment struct {
 	Name      string `json:"name"`
 	DNSSuffix string `json:"dnsSuffix"`
+}
+
+func (e *Environment) poolName() string {
+	return fmt.Sprintf("%s/%s", e.Name, e.DNSSuffix)
 }
 
 func loadConfigFile() (*Config, error) {

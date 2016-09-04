@@ -233,3 +233,25 @@ func TestConfigEnvNames(t *testing.T) {
 		t.Errorf("wrong env names returned\nwant %#v\ngot  %#v", expectedNames, gotNames)
 	}
 }
+
+func TestEnvironmentPoolName(t *testing.T) {
+	var tests = []struct {
+		input  Environment
+		output string
+	}{
+		{
+			Environment{Name: "dev", DNSSuffix: "dev.example.com"},
+			"dev/dev.example.com",
+		},
+		{
+			Environment{Name: "qa", DNSSuffix: "whatever"},
+			"qa/whatever",
+		},
+	}
+	for _, test := range tests {
+		got := test.input.poolName()
+		if got != test.output {
+			t.Errorf("wrong pool name\nWant %q\nGot  %q", test.output, got)
+		}
+	}
+}

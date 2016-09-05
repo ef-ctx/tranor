@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/tsuru/tsuru/cmd"
 )
@@ -69,8 +70,12 @@ func deleteApps(apps []string, client *cmd.Client) ([]error, error) {
 	return errs, nil
 }
 
-func listApps(client *cmd.Client) ([]app, error) {
-	url, err := cmd.GetURL("/apps")
+func listApps(client *cmd.Client, filters map[string]string) ([]app, error) {
+	qs := make(url.Values)
+	for k, v := range filters {
+		qs.Set(k, v)
+	}
+	url, err := cmd.GetURL("/apps?" + qs.Encode())
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +88,41 @@ func listApps(client *cmd.Client) ([]app, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNoContent {
+		return nil, nil
+	}
 	var apps []app
 	err = json.NewDecoder(resp.Body).Decode(&apps)
 	return apps, err
+}
+
+func lastDeploy(client *cmd.Client, appName string) (deploy, error) {
+	var d deploy
+	url, err := cmd.GetURL("/apps?limit=1&app=" + appName)
+	if err != nil {
+		return d, err
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return d, err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return d, err
+	}
+	defer resp.Body.Close()
+	var deploys []deploy
+	if resp.StatusCode == http.StatusNoContent {
+		return d, nil
+	}
+	err = json.NewDecoder(resp.Body).Decode(&deploys)
+	if err != nil {
+		return d, err
+	}
+	if len(deploys) > 0 {
+		d = deploys[0]
+	}
+	return d, nil
 }
 
 type app struct {
@@ -93,4 +130,10 @@ type app struct {
 	CName []string `json:"cname"`
 	Env   Environment
 	Addr  string
+}
+
+type deploy struct {
+	ID        string
+	Timestamp time.Time
+	Image     string
 }

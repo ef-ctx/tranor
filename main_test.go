@@ -135,6 +135,17 @@ func TestProjectRemoveIsRegistered(t *testing.T) {
 	}
 }
 
+func TestProjectInfoIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-info"]
+	if !ok {
+		t.Error("command project-info not found")
+	}
+	if _, ok := gotCommand.(*projectInfo); !ok {
+		t.Errorf("command %#v is not of type projectInfo{}", gotCommand)
+	}
+}
+
 func TestProjectListIsRegistered(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["project-list"]

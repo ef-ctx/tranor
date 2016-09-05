@@ -172,3 +172,21 @@ const listOfApps = `[
     }
   }
 ]`
+
+const deployments = `[
+  {
+    "ID": "57ccc9490640fd3def98b157",
+    "App": "proj1-dev",
+    "Timestamp": "2016-09-05T01:24:25.706Z",
+    "Duration": 125995000000,
+    "Commit": "40244ff2866eba7e2da6eee8a6fc51464c9f604f",
+    "Error": "",
+    "Image": "v938",
+    "Log": "",
+    "User": "admin@example.com",
+    "Origin": "",
+    "CanRollback": true,
+    "RemoveDate": "0001-01-01T00:00:00Z",
+    "Diff": ""
+  }
+]`

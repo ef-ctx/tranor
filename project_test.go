@@ -731,12 +731,135 @@ func TestRemoveProjectConfigurationIssue(t *testing.T) {
 	}
 }
 
+func TestProjectInfo(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=proj1",
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?limit=1&app=proj1-dev",
+		code:    http.StatusOK,
+		payload: []byte(deployments),
+	})
+	for _, appName := range []string{"proj1-qa", "proj1-stage"} {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps?limit=1&app=" + appName,
+			code:    http.StatusNoContent,
+			payload: nil,
+		})
+	}
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `Project name: proj1
+
++-------------+-------------------------+---------+-------------------------------+
+| Environment | Address                 | Version | Deploy date                   |
++-------------+-------------------------+---------+-------------------------------+
+| dev         | proj1.dev.example.com   | v938    | Mon, 05 Sep 2016 01:24:25 UTC |
+| qa          | proj1.qa.example.com    |         |                               |
+| stage       | proj1.stage.example.com |         |                               |
+| production  | proj1.example.com       |         |                               |
++-------------+-------------------------+---------+-------------------------------+
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectInfoErrorToListApps(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=proj1",
+		code:    http.StatusInternalServerError,
+		payload: []byte("something went wrong"),
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestProjectInfoConfigIssue(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	var c projectInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	err = c.Run(&ctx, nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestProjectInfoMissingName(t *testing.T) {
+	var c projectInfo
+	err := c.Flags().Parse(true, []string{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	expectedMsg := "please provide the name of the project"
+	if err.Error() != expectedMsg {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
 func TestProjectList(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
 		method:  "GET",
-		path:    "/apps",
+		path:    "/apps?",
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
 	})

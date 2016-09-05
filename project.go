@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/tsuru/gnuflag"
 	"github.com/tsuru/tsuru/cmd"
@@ -239,6 +240,77 @@ func (c *projectRemove) Flags() *gnuflag.FlagSet {
 	return c.fs
 }
 
+type projectInfo struct {
+	name string
+	fs   *gnuflag.FlagSet
+}
+
+func (c *projectInfo) Info() *cmd.Info {
+	return &cmd.Info{
+		Name: "project-info",
+	}
+}
+
+func (c *projectInfo) Run(ctx *cmd.Context, client *cmd.Client) error {
+	if c.name == "" {
+		return errors.New("please provide the name of the project")
+	}
+	apps, err := c.projectApps(client)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(ctx.Stdout, "Project name: %s\n\n", c.name)
+	var envs cmd.Table
+	envs.Headers = cmd.Row{"Environment", "Address", "Version", "Deploy date"}
+	for _, app := range apps {
+		row := cmd.Row{app.Env.Name, app.Addr, "", ""}
+		if deploy, err := lastDeploy(client, app.Name); err == nil && deploy.Image != "" {
+			row[2] = deploy.Image
+			row[3] = deploy.Timestamp.Format(time.RFC1123)
+		}
+		envs.AddRow(row)
+	}
+	ctx.Stdout.Write(envs.Bytes())
+	return nil
+}
+
+func (c *projectInfo) projectApps(client *cmd.Client) ([]app, error) {
+	config, err := loadConfigFile()
+	if err != nil {
+		return nil, errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
+	apps, err := listApps(client, map[string]string{"name": c.name})
+	if err != nil {
+		return nil, err
+	}
+	var projectApps []app
+	for _, env := range config.Environments {
+		for _, app := range apps {
+			if len(app.CName) != 1 {
+				continue
+			}
+			nameParts := env.nameRegexp().FindStringSubmatch(app.Name)
+			dnsParts := env.dnsRegexp().FindStringSubmatch(app.CName[0])
+			if len(nameParts) == 2 && len(dnsParts) == 2 && nameParts[1] == dnsParts[1] && nameParts[1] == c.name {
+				app.Addr = app.CName[0]
+				app.Env = env
+				projectApps = append(projectApps, app)
+				continue
+			}
+		}
+	}
+	return projectApps, nil
+}
+
+func (c *projectInfo) Flags() *gnuflag.FlagSet {
+	if c.fs == nil {
+		c.fs = gnuflag.NewFlagSet("project-info", gnuflag.ExitOnError)
+		c.fs.StringVar(&c.name, "name", "", "Name of the project")
+		c.fs.StringVar(&c.name, "n", "", "Name of the project")
+	}
+	return c.fs
+}
+
 type projectList struct{}
 
 func (c *projectList) Info() *cmd.Info {
@@ -252,7 +324,7 @@ func (c *projectList) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if err != nil {
 		return errors.New("unable to load environments file, please make sure that tranor is properly configured")
 	}
-	apps, err := listApps(client)
+	apps, err := listApps(client, nil)
 	if err != nil {
 		return err
 	}

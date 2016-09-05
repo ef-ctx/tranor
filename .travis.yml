@@ -20,6 +20,3 @@ script:
   - ./check-fmt.sh
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-matrix:
-  allow_failures:
-    - go: tip

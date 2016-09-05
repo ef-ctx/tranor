@@ -30,6 +30,7 @@ func buildManager(name string) *cmd.Manager {
 	mngr.Register(&client.PlanList{})
 	mngr.Register(&projectCreate{})
 	mngr.Register(&projectRemove{})
+	mngr.Register(&projectList{})
 	return mngr
 }
 

@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/tsuru/tsuru/cmd"
 )
@@ -62,10 +63,26 @@ func (c *Config) writeTarget() error {
 type Environment struct {
 	Name      string `json:"name"`
 	DNSSuffix string `json:"dnsSuffix"`
+	namer     *regexp.Regexp
+	dnsr      *regexp.Regexp
 }
 
 func (e *Environment) poolName() string {
 	return fmt.Sprintf("%s/%s", e.Name, e.DNSSuffix)
+}
+
+func (e *Environment) nameRegexp() *regexp.Regexp {
+	if e.namer == nil {
+		e.namer = regexp.MustCompile("^([^-]+)-" + e.Name + "$")
+	}
+	return e.namer
+}
+
+func (e *Environment) dnsRegexp() *regexp.Regexp {
+	if e.dnsr == nil {
+		e.dnsr = regexp.MustCompile(`^([^-]+)\.` + e.DNSSuffix + "$")
+	}
+	return e.dnsr
 }
 
 func loadConfigFile() (*Config, error) {

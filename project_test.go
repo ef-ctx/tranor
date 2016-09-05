@@ -727,6 +727,90 @@ func TestRemoveProjectConfigurationIssue(t *testing.T) {
 	}
 }
 
+func TestProjectList(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps",
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectList
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `+---------+--------------+-------------------------+
+| Project | Environments | Address                 |
++---------+--------------+-------------------------+
+| proj1   | dev          | proj1.dev.example.com   |
+|         | qa           | proj1.qa.example.com    |
+|         | stage        | proj1.stage.example.com |
+|         | production   | proj1.example.com       |
++---------+--------------+-------------------------+
+| proj2   | dev          | proj2.dev.example.com   |
+|         | qa           | proj2.qa.example.com    |
+|         | stage        | proj2.stage.example.com |
+|         | production   | proj2.example.com       |
++---------+--------------+-------------------------+
+| proj3   | dev          | proj3.dev.example.com   |
+|         | production   | proj3.example.com       |
++---------+--------------+-------------------------+
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectListErrorToListApps(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps",
+		code:    http.StatusInternalServerError,
+		payload: []byte("something went wrong"),
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectList
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestProjectListNoConfiguration(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	var c projectList
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	err = c.Run(&ctx, nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
 func setupFakeTarget(target string) (func(), error) {
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {

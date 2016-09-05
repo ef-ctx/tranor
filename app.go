@@ -68,3 +68,29 @@ func deleteApps(apps []string, client *cmd.Client) ([]error, error) {
 	}
 	return errs, nil
 }
+
+func listApps(client *cmd.Client) ([]app, error) {
+	url, err := cmd.GetURL("/apps")
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var apps []app
+	err = json.NewDecoder(resp.Body).Decode(&apps)
+	return apps, err
+}
+
+type app struct {
+	Name  string   `json:"name"`
+	CName []string `json:"cname"`
+	Env   Environment
+	Addr  string
+}

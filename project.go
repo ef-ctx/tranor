@@ -7,8 +7,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/tsuru/gnuflag"
@@ -234,4 +236,85 @@ func (c *projectRemove) Flags() *gnuflag.FlagSet {
 		c.fs.StringVar(&c.name, "n", "", "name of the project to remove")
 	}
 	return c.fs
+}
+
+type projectList struct {
+}
+
+func (c *projectList) Info() *cmd.Info {
+	return &cmd.Info{
+		Name: "project-list",
+	}
+}
+
+func (c *projectList) Run(ctx *cmd.Context, client *cmd.Client) error {
+	config, err := loadConfigFile()
+	if err != nil {
+		return errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
+	apps, err := listApps(client)
+	if err != nil {
+		return err
+	}
+	projects := make(map[string][]app)
+	for _, env := range config.Environments {
+		for _, app := range apps {
+			if len(app.CName) != 1 {
+				continue
+			}
+			partsName := env.nameRegexp().FindStringSubmatch(app.Name)
+			partsDNS := env.dnsRegexp().FindStringSubmatch(app.CName[0])
+			if len(partsName) == 2 && len(partsDNS) == 2 && partsName[1] == partsDNS[1] {
+				projectName := partsDNS[1]
+				app.Env = env
+				app.Addr = app.CName[0]
+				projects[projectName] = append(projects[projectName], app)
+			}
+		}
+	}
+	c.render(ctx.Stdout, projects)
+	return nil
+}
+
+func (c *projectList) render(w io.Writer, projects map[string][]app) {
+	var list projectSlice
+	for name, apps := range projects {
+		list = append(list, struct {
+			Name string
+			Apps []app
+		}{Name: name, Apps: apps})
+	}
+	sort.Sort(list)
+	var table cmd.Table
+	table.LineSeparator = true
+	table.Headers = cmd.Row{"Project", "Environments", "Address"}
+	for _, project := range list {
+		var (
+			envNames  []string
+			addresses []string
+		)
+		for _, app := range project.Apps {
+			envNames = append(envNames, app.Env.Name)
+			addresses = append(addresses, app.Addr)
+		}
+		table.AddRow(cmd.Row{project.Name, strings.Join(envNames, "\n"), strings.Join(addresses, "\n")})
+	}
+	w.Write(table.Bytes())
+}
+
+type projectSlice []struct {
+	Name string
+	Apps []app
+}
+
+func (l projectSlice) Len() int {
+	return len(l)
+}
+
+func (l projectSlice) Less(i, j int) bool {
+	return l[i].Name < l[j].Name
+}
+
+func (l projectSlice) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
 }

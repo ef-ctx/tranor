@@ -742,14 +742,14 @@ func TestProjectInfo(t *testing.T) {
 	})
 	server.prepareResponse(preparedResponse{
 		method:  "GET",
-		path:    "/apps?limit=1&app=proj1-dev",
+		path:    "/deploys?limit=1&app=proj1-dev",
 		code:    http.StatusOK,
 		payload: []byte(deployments),
 	})
 	for _, appName := range []string{"proj1-qa", "proj1-stage"} {
 		server.prepareResponse(preparedResponse{
 			method:  "GET",
-			path:    "/apps?limit=1&app=" + appName,
+			path:    "/deploys?limit=1&app=" + appName,
 			code:    http.StatusNoContent,
 			payload: nil,
 		})

@@ -98,7 +98,7 @@ func listApps(client *cmd.Client, filters map[string]string) ([]app, error) {
 
 func lastDeploy(client *cmd.Client, appName string) (deploy, error) {
 	var d deploy
-	url, err := cmd.GetURL("/apps?limit=1&app=" + appName)
+	url, err := cmd.GetURL("/deploys?limit=1&app=" + appName)
 	if err != nil {
 		return d, err
 	}

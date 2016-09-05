@@ -93,7 +93,7 @@ func TestLastDeployEmpty(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		method: "GET",
-		path:   "/apps?limit=1&app=myapp",
+		path:   "/deploys?limit=1&app=myapp",
 		code:   http.StatusNoContent,
 	})
 	cleanup, err := setupFakeTarget(fakeServer.url())

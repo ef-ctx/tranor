@@ -239,8 +239,7 @@ func (c *projectRemove) Flags() *gnuflag.FlagSet {
 	return c.fs
 }
 
-type projectList struct {
-}
+type projectList struct{}
 
 func (c *projectList) Info() *cmd.Info {
 	return &cmd.Info{

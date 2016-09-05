@@ -343,6 +343,51 @@ func TestProjectCreateNoRepo(t *testing.T) {
 	}
 }
 
+func TestProjectCreateMissingParams(t *testing.T) {
+	var tests = []struct {
+		testCase string
+		flags    []string
+	}{
+		{
+			"missing name",
+			[]string{"-l", "python"},
+		},
+		{
+			"missing platform",
+			[]string{"-n", "superproj"},
+		},
+		{
+			"missing all flags",
+			[]string{},
+		},
+	}
+	cleanup, err := setupFakeTarget("http://localhost:8080")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	for _, test := range tests {
+		var c projectCreate
+		err = c.Flags().Parse(true, test.flags)
+		if err != nil {
+			t.Errorf("%s: %s", test.testCase, err)
+			continue
+		}
+		var stdout, stderr bytes.Buffer
+		ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+		client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+		err = c.Run(&ctx, client)
+		if err == nil {
+			t.Errorf("%s: unexpected <nil> error", test.testCase)
+			continue
+		}
+		expectedMsg := "please provide the name and the platform"
+		if err.Error() != expectedMsg {
+			t.Errorf("%s: wrong error message\nwant %q\ngot  %q", test.testCase, expectedMsg, err.Error())
+		}
+	}
+}
+
 func TestProjectCreateInvalidEnv(t *testing.T) {
 	cleanup, err := setupFakeTarget("http://localhost:8080")
 	if err != nil {

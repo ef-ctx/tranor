@@ -226,6 +226,7 @@ func (c *projectRemove) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if notFound == len(errs) {
 		return errors.New("project not found")
 	}
+	fmt.Fprintln(ctx.Stdout, "Project successfully removed!")
 	return nil
 }
 

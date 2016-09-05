@@ -771,17 +771,18 @@ func TestProjectInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `Project name: proj1
-
-+-------------+-------------------------+---------+-------------------------------+
-| Environment | Address                 | Version | Deploy date                   |
-+-------------+-------------------------+---------+-------------------------------+
-| dev         | proj1.dev.example.com   | v938    | Mon, 05 Sep 2016 01:24:25 UTC |
-| qa          | proj1.qa.example.com    |         |                               |
-| stage       | proj1.stage.example.com |         |                               |
-| production  | proj1.example.com       |         |                               |
-+-------------+-------------------------+---------+-------------------------------+
-`
+	table := cmd.Table{Headers: cmd.Row{"Environment", "Address", "Version", "Deploy date"}}
+	expectedOutput := "Project name: proj1\n\n"
+	rows := []cmd.Row{
+		{"dev", "proj1.dev.example.com", "v938", "Mon, 05 Sep 2016 01:24:25 UTC"},
+		{"qa", "proj1.qa.example.com", "", ""},
+		{"stage", "proj1.stage.example.com", "", ""},
+		{"production", "proj1.example.com", "", ""},
+	}
+	for _, row := range rows {
+		table.AddRow(row)
+	}
+	expectedOutput += table.String()
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
 	}

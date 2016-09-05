@@ -863,6 +863,12 @@ func TestProjectList(t *testing.T) {
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
 	})
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps",
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
 	cleanup, err := setupFakeTarget(server.url())
 	if err != nil {
 		t.Fatal(err)

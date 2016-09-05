@@ -55,6 +55,11 @@ func TestListAppsEmpty(t *testing.T) {
 		path:   "/apps?",
 		code:   http.StatusNoContent,
 	})
+	fakeServer.prepareResponse(preparedResponse{
+		method: "GET",
+		path:   "/apps",
+		code:   http.StatusNoContent,
+	})
 	cleanup, err := setupFakeTarget(fakeServer.url())
 	if err != nil {
 		t.Fatal(err)

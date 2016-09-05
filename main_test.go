@@ -124,6 +124,17 @@ func TestProjectCreateIsRegistered(t *testing.T) {
 	}
 }
 
+func TestProjectRemoveIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-remove"]
+	if !ok {
+		t.Error("command project-remove not found")
+	}
+	if _, ok := gotCommand.(*projectRemove); !ok {
+		t.Errorf("command %#v is not of type projectRemove{}", gotCommand)
+	}
+}
+
 func TestBuiltinTargetSetIsOverwritten(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["target-set"]

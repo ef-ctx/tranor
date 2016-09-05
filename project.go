@@ -13,6 +13,7 @@ import (
 
 	"github.com/tsuru/gnuflag"
 	"github.com/tsuru/tsuru/cmd"
+	tsuruerrors "github.com/tsuru/tsuru/errors"
 )
 
 type projectCreate struct {
@@ -50,7 +51,11 @@ func (c *projectCreate) Run(ctx *cmd.Context, client *cmd.Client) error {
 	}
 	err = c.setCNames(apps, client)
 	if err != nil {
-		c.deleteApps(apps, client)
+		appNames := make([]string, len(apps))
+		for i, app := range apps {
+			appNames[i] = app["name"]
+		}
+		deleteApps(appNames, client)
 		return fmt.Errorf("failed to configure project %q: %s", c.name, err)
 	}
 	fmt.Fprintf(ctx.Stdout, "successfully created the project %q!\n", c.name)
@@ -80,6 +85,7 @@ func (c *projectCreate) Flags() *gnuflag.FlagSet {
 
 func (c *projectCreate) createApps(envs []Environment, client *cmd.Client) ([]map[string]string, error) {
 	createdApps := make([]map[string]string, 0, len(envs))
+	appNames := make([]string, 0, len(envs))
 	for _, env := range envs {
 		appName := fmt.Sprintf("%s-%s", c.name, env.Name)
 		app, err := createApp(client, createAppOptions{
@@ -90,33 +96,15 @@ func (c *projectCreate) createApps(envs []Environment, client *cmd.Client) ([]ma
 			team:     c.team,
 		})
 		if err != nil {
-			c.deleteApps(createdApps, client)
+			deleteApps(appNames, client)
 			return nil, fmt.Errorf("failed to create the project in env %q: %s", env.Name, err)
 		}
 		app["name"] = appName
 		app["dnsSuffix"] = env.DNSSuffix
 		createdApps = append(createdApps, app)
+		appNames = append(appNames, appName)
 	}
 	return createdApps, nil
-}
-
-func (c *projectCreate) deleteApps(apps []map[string]string, client *cmd.Client) error {
-	for _, app := range apps {
-		url, err := cmd.GetURL("/apps/" + app["name"])
-		if err != nil {
-			return err
-		}
-		req, err := http.NewRequest("DELETE", url, nil)
-		if err != nil {
-			return err
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			continue
-		}
-		resp.Body.Close()
-	}
-	return nil
 }
 
 func (c *projectCreate) setCNames(apps []map[string]string, client *cmd.Client) error {
@@ -190,4 +178,60 @@ func (f *commaSeparatedFlag) validate(validValues []string) error {
 		return fmt.Errorf("invalid values: %s (valid options are: %s)", strings.Join(invalidValues, ", "), strings.Join(validValues, ", "))
 	}
 	return nil
+}
+
+type projectRemove struct {
+	cmd.ConfirmationCommand
+	name string
+	fs   *gnuflag.FlagSet
+}
+
+func (c *projectRemove) Info() *cmd.Info {
+	return &cmd.Info{
+		Name: "project-remove",
+		Desc: "removes the given project",
+	}
+}
+
+func (c *projectRemove) Run(ctx *cmd.Context, client *cmd.Client) error {
+	if c.name == "" {
+		return errors.New("please provide the name of the project")
+	}
+	config, err := loadConfigFile()
+	if err != nil {
+		return errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
+	if !c.Confirm(ctx, fmt.Sprintf("Are you sure you want to remove the project %q?", c.name)) {
+		return nil
+	}
+	envNames := config.envNames()
+	appNames := make([]string, len(envNames))
+	for i, envName := range envNames {
+		appNames[i] = fmt.Sprintf("%s-%s", c.name, envName)
+	}
+	errs, err := deleteApps(appNames, client)
+	if err != nil {
+		return err
+	}
+	var notFound int
+	for _, err := range errs {
+		if err != nil {
+			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
+				notFound++
+			}
+		}
+	}
+	if notFound == len(errs) {
+		return errors.New("project not found")
+	}
+	return nil
+}
+
+func (c *projectRemove) Flags() *gnuflag.FlagSet {
+	if c.fs == nil {
+		c.fs = c.ConfirmationCommand.Flags()
+		c.fs.StringVar(&c.name, "name", "", "name of the project to b remove")
+		c.fs.StringVar(&c.name, "n", "", "name of the project to remove")
+	}
+	return c.fs
 }

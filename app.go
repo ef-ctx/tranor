@@ -50,3 +50,21 @@ func createApp(client *cmd.Client, opts createAppOptions) (map[string]string, er
 	err = json.NewDecoder(resp.Body).Decode(&app)
 	return app, err
 }
+
+func deleteApps(apps []string, client *cmd.Client) ([]error, error) {
+	var errs []error
+	for _, app := range apps {
+		url, err := cmd.GetURL("/apps/" + app)
+		if err != nil {
+			return nil, err
+		}
+		req, err := http.NewRequest("DELETE", url, nil)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := client.Do(req)
+		resp.Body.Close()
+		errs = append(errs, err)
+	}
+	return errs, nil
+}

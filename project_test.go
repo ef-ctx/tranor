@@ -771,7 +771,7 @@ func TestProjectInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	table := cmd.Table{Headers: cmd.Row([]string{"Environment", "Address", "Version", "Deploy date"})}
+	table := cmd.Table{Headers: cmd.Row([]string{"Environment", "Address", "Image", "Deploy date"})}
 	expectedOutput := "Project name: proj1\n\n"
 	rows := []cmd.Row{
 		{"dev", "proj1.dev.example.com", "v938", "Mon, 05 Sep 2016 01:24:25 UTC"},

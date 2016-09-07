@@ -47,7 +47,7 @@ func (c *projectCreate) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if err != nil {
 		return fmt.Errorf("failed to load environments: %s", err)
 	}
-	envs := c.filterEnvironments(config.Environments, c.envs.Values())
+	envs := c.getEnvironmentsByName(config.Environments, c.envs.Values())
 	apps, err := c.createApps(envs, client)
 	if err != nil {
 		return err
@@ -133,7 +133,7 @@ func (c *projectCreate) setCNames(apps []map[string]string, client *cmd.Client) 
 	return nil
 }
 
-func (c *projectCreate) filterEnvironments(envs []Environment, names []string) []Environment {
+func (c *projectCreate) getEnvironmentsByName(envs []Environment, names []string) []Environment {
 	var filtered []Environment
 	for _, e := range envs {
 		for _, name := range names {
@@ -261,7 +261,7 @@ func (c *projectInfo) Run(ctx *cmd.Context, client *cmd.Client) error {
 	}
 	fmt.Fprintf(ctx.Stdout, "Project name: %s\n\n", c.name)
 	var envs cmd.Table
-	envs.Headers = cmd.Row{"Environment", "Address", "Version", "Deploy date"}
+	envs.Headers = cmd.Row{"Environment", "Address", "Image", "Deploy date"}
 	for _, app := range apps {
 		row := cmd.Row{app.Env.Name, app.Addr, "", ""}
 		if deploy, err := lastDeploy(client, app.Name); err == nil && deploy.Image != "" {
@@ -295,7 +295,6 @@ func (c *projectInfo) projectApps(client *cmd.Client) ([]app, error) {
 				app.Addr = app.CName[0]
 				app.Env = env
 				projectApps = append(projectApps, app)
-				continue
 			}
 		}
 	}

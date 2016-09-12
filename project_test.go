@@ -788,6 +788,37 @@ func TestProjectInfo(t *testing.T) {
 	}
 }
 
+func ProjectInfoNotFound(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method: "GET",
+		path:   "/apps?name=" + url.QueryEscape("^proj1"),
+		code:   http.StatusOK,
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal(err)
+	}
+	expectedMsg := "project not found"
+	if err.Error() != expectedMsg {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
 func TestProjectInfoErrorToListApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()

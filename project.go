@@ -291,6 +291,9 @@ func (c *projectInfo) projectApps(client *cmd.Client) ([]app, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(apps) == 0 {
+		return nil, errors.New("project not found")
+	}
 	var projectApps []app
 	for _, env := range config.Environments {
 		for _, app := range apps {

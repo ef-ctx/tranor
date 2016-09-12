@@ -279,7 +279,7 @@ func (c *projectInfo) projectApps(client *cmd.Client) ([]app, error) {
 	if err != nil {
 		return nil, errors.New("unable to load environments file, please make sure that tranor is properly configured")
 	}
-	apps, err := listApps(client, map[string]string{"name": c.name})
+	apps, err := listApps(client, map[string]string{"name": "^" + c.name})
 	if err != nil {
 		return nil, err
 	}

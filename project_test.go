@@ -736,7 +736,7 @@ func TestProjectInfo(t *testing.T) {
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
 		method:  "GET",
-		path:    "/apps?name=proj1",
+		path:    "/apps?name=" + url.QueryEscape("^proj1"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
 	})

@@ -22,7 +22,7 @@ import (
 func TestCommaSeparatedFlag(t *testing.T) {
 	var value gnuflag.Value
 	value = &commaSeparatedFlag{}
-	input := "dev,qa,staging,production"
+	input := "dev,qa,staging,prod"
 	err := value.Set(input)
 	if err != nil {
 		t.Fatal(err)
@@ -32,7 +32,7 @@ func TestCommaSeparatedFlag(t *testing.T) {
 		t.Errorf("wrong output.\nwant %q\ngot  %q", input, output)
 	}
 	values := value.(*commaSeparatedFlag).Values()
-	expectedValues := []string{"dev", "qa", "staging", "production"}
+	expectedValues := []string{"dev", "qa", "staging", "prod"}
 	if !reflect.DeepEqual(values, expectedValues) {
 		t.Errorf("wrong value list\nwant %#v\ngot  %#v", expectedValues, values)
 	}
@@ -47,21 +47,21 @@ func TestCommaSeparatedFlagValidate(t *testing.T) {
 	}{
 		{
 			"valid values",
-			"dev,qa,staging,production",
-			[]string{"dev", "qa", "staging", "demo", "production"},
+			"dev,qa,staging,prod",
+			[]string{"dev", "qa", "staging", "demo", "prod"},
 			"",
 		},
 		{
 			"one invalid value",
-			"dev,qa,staging,production",
-			[]string{"dev", "qa", "demo", "production"},
-			"invalid values: staging (valid options are: dev, qa, demo, production)",
+			"dev,qa,staging,prod",
+			[]string{"dev", "qa", "demo", "prod"},
+			"invalid values: staging (valid options are: dev, qa, demo, prod)",
 		},
 		{
 			"all invalid values",
-			"dev,qa,staging,production",
+			"dev,qa,staging,prod",
 			nil,
-			"invalid values: dev, qa, staging, production (valid options are: )",
+			"invalid values: dev, qa, staging, prod (valid options are: )",
 		},
 	}
 	for _, test := range tests {
@@ -100,7 +100,7 @@ func TestProjectCreateDefaultEnvs(t *testing.T) {
 		code:    http.StatusCreated,
 		payload: []byte(`{"repository_url":"git@git.example.com:myproj-dev.git"}`),
 	})
-	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-production"}
+	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-prod"}
 	for _, appName := range appNames {
 		server.prepareResponse(preparedResponse{
 			method:  "POST",
@@ -143,7 +143,7 @@ Git repository: git@git.example.com:myproj-dev.git
 	expectedPaths := []string{
 		"/1.0/apps", "/1.0/apps", "/1.0/apps", "/1.0/apps",
 		"/1.0/apps/myproj-dev/cname", "/1.0/apps/myproj-qa/cname",
-		"/1.0/apps/myproj-stage/cname", "/1.0/apps/myproj-production/cname",
+		"/1.0/apps/myproj-stage/cname", "/1.0/apps/myproj-prod/cname",
 	}
 	for i, req := range server.reqs {
 		if req.Method != "POST" {
@@ -176,11 +176,11 @@ Git repository: git@git.example.com:myproj-dev.git
 			"pool":      []string{"stage/stage.example.com"},
 		},
 		{
-			"name":      []string{"myproj-production"},
+			"name":      []string{"myproj-prod"},
 			"platform":  []string{"python"},
 			"plan":      []string{"medium"},
 			"teamOwner": []string{"myteam"},
-			"pool":      []string{"production/example.com"},
+			"pool":      []string{"prod/example.com"},
 		},
 		{"cname": []string{"myproj.dev.example.com"}},
 		{"cname": []string{"myproj.qa.example.com"}},
@@ -210,7 +210,7 @@ func TestProjectCreateSpecifyEnvs(t *testing.T) {
 		code:    http.StatusCreated,
 		payload: []byte(`{"repository_url":"git@git.example.com:superproj-dev.git"}`),
 	})
-	appNames := []string{"superproj-dev", "superproj-production"}
+	appNames := []string{"superproj-dev", "superproj-prod"}
 	for _, appName := range appNames {
 		server.prepareResponse(preparedResponse{
 			method:  "POST",
@@ -230,7 +230,7 @@ func TestProjectCreateSpecifyEnvs(t *testing.T) {
 		"-l", "python",
 		"-t", "myteam",
 		"-p", "medium",
-		"-e", "dev,production",
+		"-e", "dev,prod",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -251,7 +251,7 @@ Git repository: git@git.example.com:superproj-dev.git
 	expectedPaths := []string{
 		"/1.0/apps", "/1.0/apps",
 		"/1.0/apps/superproj-dev/cname",
-		"/1.0/apps/superproj-production/cname",
+		"/1.0/apps/superproj-prod/cname",
 	}
 	if len(server.reqs) != len(expectedPaths) {
 		t.Fatalf("wrong number of requests sent to the server. Want %d. Got %d", len(expectedPaths), len(server.reqs))
@@ -273,11 +273,11 @@ Git repository: git@git.example.com:superproj-dev.git
 			"pool":      []string{"dev/dev.example.com"},
 		},
 		{
-			"name":      []string{"superproj-production"},
+			"name":      []string{"superproj-prod"},
 			"platform":  []string{"python"},
 			"plan":      []string{"medium"},
 			"teamOwner": []string{"myteam"},
-			"pool":      []string{"production/example.com"},
+			"pool":      []string{"prod/example.com"},
 		},
 		{"cname": []string{"superproj.dev.example.com"}},
 		{"cname": []string{"superproj.example.com"}},
@@ -305,7 +305,7 @@ func TestProjectCreateNoRepo(t *testing.T) {
 		code:    http.StatusCreated,
 		payload: []byte(`{}`),
 	})
-	appNames := []string{"superproj-dev", "superproj-production"}
+	appNames := []string{"superproj-dev", "superproj-prod"}
 	for _, appName := range appNames {
 		server.prepareResponse(preparedResponse{
 			method:  "POST",
@@ -325,7 +325,7 @@ func TestProjectCreateNoRepo(t *testing.T) {
 		"-l", "python",
 		"-t", "myteam",
 		"-p", "medium",
-		"-e", "dev,production",
+		"-e", "dev,prod",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -401,7 +401,7 @@ func TestProjectCreateInvalidEnv(t *testing.T) {
 		"-l", "python",
 		"-t", "myteam",
 		"-p", "medium",
-		"-e", "dev,prod",
+		"-e", "dev,production",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -459,7 +459,7 @@ func TestProjectCreateFailToCreateApp(t *testing.T) {
 		"-l", "python",
 		"-t", "myteam",
 		"-p", "medium",
-		"-e", "dev,production",
+		"-e", "dev,prod",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -489,12 +489,12 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 	})
 	server.prepareResponse(preparedResponse{
 		method: "DELETE",
-		path:   "/apps/superproj-production",
+		path:   "/apps/superproj-prod",
 		code:   http.StatusOK,
 	})
 	server.prepareResponse(preparedResponse{
 		method:  "POST",
-		path:    "/apps/superproj-production/cname",
+		path:    "/apps/superproj-prod/cname",
 		code:    http.StatusInternalServerError,
 		payload: []byte(`{}`),
 	})
@@ -509,7 +509,7 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 		"-l", "python",
 		"-t", "myteam",
 		"-p", "medium",
-		"-e", "dev,production",
+		"-e", "dev,prod",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -524,9 +524,9 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 	expectedPaths := []string{
 		"/1.0/apps", "/1.0/apps",
 		"/1.0/apps/superproj-dev/cname",
-		"/1.0/apps/superproj-production/cname",
+		"/1.0/apps/superproj-prod/cname",
 		"/1.0/apps/superproj-dev",
-		"/1.0/apps/superproj-production",
+		"/1.0/apps/superproj-prod",
 	}
 	if len(server.reqs) != len(expectedPaths) {
 		t.Fatalf("wrong number of requests sent to the server. Want %d. Got %d", len(expectedPaths), len(server.reqs))
@@ -544,7 +544,7 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 func TestRemoveProject(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
-	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-production"}
+	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-prod"}
 	expectedPaths := make([]string, len(appNames))
 	for i, appName := range appNames {
 		path := "/apps/" + appName
@@ -592,7 +592,7 @@ func TestRemoveProject(t *testing.T) {
 func TestRemoveProjectSomeEnvironments(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
-	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-production"}
+	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-prod"}
 	expectedPaths := make([]string, len(appNames))
 	for i, appName := range appNames {
 		code := http.StatusOK
@@ -679,7 +679,7 @@ func TestRemoveProjectValidation(t *testing.T) {
 func TestRemoveProjectNotFound(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
-	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-production"}
+	appNames := []string{"myproj-dev", "myproj-qa", "myproj-stage", "myproj-prod"}
 	for _, appName := range appNames {
 		path := "/apps/" + appName
 		server.prepareResponse(preparedResponse{
@@ -777,7 +777,7 @@ func TestProjectInfo(t *testing.T) {
 		{"dev", "proj1.dev.example.com", "v938", "Mon, 05 Sep 2016 01:24:25 UTC"},
 		{"qa", "proj1.qa.example.com", "", ""},
 		{"stage", "proj1.stage.example.com", "", ""},
-		{"production", "proj1.example.com", "", ""},
+		{"prod", "proj1.example.com", "", ""},
 	}
 	for _, row := range rows {
 		table.AddRow(row)
@@ -889,15 +889,15 @@ func TestProjectList(t *testing.T) {
 | proj1   | dev          | proj1.dev.example.com   |
 |         | qa           | proj1.qa.example.com    |
 |         | stage        | proj1.stage.example.com |
-|         | production   | proj1.example.com       |
+|         | prod         | proj1.example.com       |
 +---------+--------------+-------------------------+
 | proj2   | dev          | proj2.dev.example.com   |
 |         | qa           | proj2.qa.example.com    |
 |         | stage        | proj2.stage.example.com |
-|         | production   | proj2.example.com       |
+|         | prod         | proj2.example.com       |
 +---------+--------------+-------------------------+
 | proj3   | dev          | proj3.dev.example.com   |
-|         | production   | proj3.example.com       |
+|         | prod         | proj3.example.com       |
 +---------+--------------+-------------------------+
 `
 	if stdout.String() != expectedOutput {
@@ -967,7 +967,7 @@ func setupFakeTarget(target string) (func(), error) {
 				DNSSuffix: "stage.example.com",
 			},
 			{
-				Name:      "production",
+				Name:      "prod",
 				DNSSuffix: "example.com",
 			},
 		},

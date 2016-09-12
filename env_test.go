@@ -49,7 +49,7 @@ func TestEnvListRun(t *testing.T) {
 | dev         | dev.example.com   |
 | qa          | qa.example.com    |
 | stage       | stage.example.com |
-| production  | example.com       |
+| prod        | example.com       |
 +-------------+-------------------+
 `
 	if stdout.String() != expectedOutput {
@@ -96,7 +96,7 @@ func TestLoadConfigFile(t *testing.T) {
 			{Name: "dev", DNSSuffix: "dev.example.com"},
 			{Name: "qa", DNSSuffix: "qa.example.com"},
 			{Name: "stage", DNSSuffix: "stage.example.com"},
-			{Name: "production", DNSSuffix: "example.com"},
+			{Name: "prod", DNSSuffix: "example.com"},
 		},
 	}
 	if !reflect.DeepEqual(*config, expectedConfig) {
@@ -224,10 +224,10 @@ func TestConfigEnvNames(t *testing.T) {
 		Environments: []Environment{
 			{Name: "dev", DNSSuffix: "dev.example.com"},
 			{Name: "qa", DNSSuffix: "qa.example.com"},
-			{Name: "production", DNSSuffix: "example.com"},
+			{Name: "prod", DNSSuffix: "example.com"},
 		},
 	}
-	expectedNames := []string{"dev", "qa", "production"}
+	expectedNames := []string{"dev", "qa", "prod"}
 	gotNames := c.envNames()
 	if !reflect.DeepEqual(gotNames, expectedNames) {
 		t.Errorf("wrong env names returned\nwant %#v\ngot  %#v", expectedNames, gotNames)

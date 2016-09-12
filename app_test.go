@@ -98,7 +98,7 @@ func TestDeleteApps(t *testing.T) {
 	})
 	fakeServer.prepareResponse(preparedResponse{
 		method: "DELETE",
-		path:   "/apps/proj1-production",
+		path:   "/apps/proj1-prod",
 		code:   http.StatusOK,
 	})
 	cleanup, err := setupFakeTarget(fakeServer.url())
@@ -109,7 +109,7 @@ func TestDeleteApps(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	errs, err := deleteApps([]string{"proj1-dev", "proj1-qa", "proj1-production"}, client)
+	errs, err := deleteApps([]string{"proj1-dev", "proj1-qa", "proj1-prod"}, client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestDeleteApps(t *testing.T) {
 	if !reflect.DeepEqual(errs, expectedErrs) {
 		t.Errorf("wrong error list\nwant %#v\ngot  %#v", expectedErrs, errs)
 	}
-	paths := []string{"/1.0/apps/proj1-dev", "/1.0/apps/proj1-qa", "/1.0/apps/proj1-production"}
+	paths := []string{"/1.0/apps/proj1-dev", "/1.0/apps/proj1-qa", "/1.0/apps/proj1-prod"}
 	for i, req := range fakeServer.reqs {
 		if req.Method != "DELETE" {
 			t.Errorf("wrong method. Want DELETE. Got %s", req.Method)
@@ -176,15 +176,15 @@ func TestListApps(t *testing.T) {
 		{Name: "proj2-dev", CName: []string{"proj2.dev.example.com"}},
 		{Name: "proj2-qa", CName: []string{"proj2.qa.example.com"}},
 		{Name: "proj2-stage", CName: []string{"proj2.stage.example.com"}},
-		{Name: "proj2-production", CName: []string{"proj2.example.com"}},
+		{Name: "proj2-prod", CName: []string{"proj2.example.com"}},
 		{Name: "myblog-qa", CName: []string{"myblog.qa.example.com", "myblog.qa2.example.com"}},
 		{Name: "proj1-dev", CName: []string{"proj1.dev.example.com"}},
 		{Name: "proj1-qa", CName: []string{"proj1.qa.example.com"}},
 		{Name: "proj1-stage", CName: []string{"proj1.stage.example.com"}},
 		{Name: "myblog-dev", CName: []string{}},
-		{Name: "proj1-production", CName: []string{"proj1.example.com"}},
+		{Name: "proj1-prod", CName: []string{"proj1.example.com"}},
 		{Name: "proj3-dev", CName: []string{"proj3.dev.example.com"}},
-		{Name: "proj3-production", CName: []string{"proj3.example.com"}},
+		{Name: "proj3-prod", CName: []string{"proj3.example.com"}},
 	}
 	if !reflect.DeepEqual(apps, expectedApps) {
 		t.Errorf("wrong list of apps\nwant %#v\ngot  %#v", expectedApps, apps)

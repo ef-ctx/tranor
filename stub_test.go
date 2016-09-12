@@ -56,11 +56,11 @@ const listOfApps = `[
     }
   },
   {
-    "name": "proj2-production",
+    "name": "proj2-prod",
     "cname": [
       "proj2.example.com"
     ],
-    "ip": "proj2-production.192.168.50.4.nip.io",
+    "ip": "proj2-prod.192.168.50.4.nip.io",
     "lock": {
       "Locked": false,
       "Reason": "",
@@ -133,11 +133,11 @@ const listOfApps = `[
     }
   },
   {
-    "name": "proj1-production",
+    "name": "proj1-prod",
     "cname": [
       "proj1.example.com"
     ],
-    "ip": "proj1-production.192.168.50.4.nip.io",
+    "ip": "proj1-prod.192.168.50.4.nip.io",
     "lock": {
       "Locked": false,
       "Reason": "",
@@ -159,11 +159,11 @@ const listOfApps = `[
     }
   },
   {
-    "name": "proj3-production",
+    "name": "proj3-prod",
     "cname": [
       "proj3.example.com"
     ],
-    "ip": "proj3-production.192.168.50.4.nip.io",
+    "ip": "proj3-prod.192.168.50.4.nip.io",
     "lock": {
       "Locked": false,
       "Reason": "",

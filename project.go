@@ -79,11 +79,19 @@ func (c *projectCreate) Flags() *gnuflag.FlagSet {
 		c.fs.StringVar(&c.team, "t", "", "team that owns the project")
 		c.fs.StringVar(&c.plan, "plan", "", "plan to use for the project")
 		c.fs.StringVar(&c.plan, "p", "", "plan to use for the project")
-		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to use (defaults to dev,qa,stage,production)")
-		c.fs.Var(&c.envs, "e", "comma-separated list of environments to use (defaults to env,qa,stage,production)")
-		c.envs.Set("dev,qa,stage,production")
+		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to use")
+		c.fs.Var(&c.envs, "e", "comma-separated list of environments to use")
+		c.envs.Set(c.defaultEnvs())
 	}
 	return c.fs
+}
+
+func (c *projectCreate) defaultEnvs() string {
+	var envNames []string
+	if config, err := loadConfigFile(); err == nil {
+		envNames = config.envNames()
+	}
+	return strings.Join(envNames, ",")
 }
 
 func (c *projectCreate) createApps(envs []Environment, client *cmd.Client) ([]map[string]string, error) {

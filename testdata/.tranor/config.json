@@ -14,7 +14,7 @@
 			"dnsSuffix": "stage.example.com"
 		},
 		{
-			"name": "production",
+			"name": "prod",
 			"dnsSuffix": "example.com"
 		}
 	]

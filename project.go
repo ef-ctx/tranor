@@ -300,9 +300,11 @@ func (c *projectInfo) projectApps(client *cmd.Client) ([]app, error) {
 			if len(app.CName) != 1 {
 				continue
 			}
-			nameParts := env.nameRegexp().FindStringSubmatch(app.Name)
-			dnsParts := env.dnsRegexp().FindStringSubmatch(app.CName[0])
-			if len(nameParts) == 2 && len(dnsParts) == 2 && nameParts[1] == dnsParts[1] && nameParts[1] == c.name {
+			projectName, err := extractProjectName(app, env)
+			if err != nil {
+				continue
+			}
+			if projectName == c.name {
 				app.Addr = app.CName[0]
 				app.Env = env
 				projectApps = append(projectApps, app)
@@ -344,10 +346,7 @@ func (c *projectList) Run(ctx *cmd.Context, client *cmd.Client) error {
 			if len(app.CName) != 1 {
 				continue
 			}
-			partsName := env.nameRegexp().FindStringSubmatch(app.Name)
-			partsDNS := env.dnsRegexp().FindStringSubmatch(app.CName[0])
-			if len(partsName) == 2 && len(partsDNS) == 2 && partsName[1] == partsDNS[1] {
-				projectName := partsDNS[1]
+			if projectName, err := extractProjectName(app, env); err == nil {
 				app.Env = env
 				app.Addr = app.CName[0]
 				projects[projectName] = append(projects[projectName], app)
@@ -382,6 +381,15 @@ func (c *projectList) render(w io.Writer, projects map[string][]app) {
 		table.AddRow(cmd.Row{project.Name, strings.Join(envNames, "\n"), strings.Join(addresses, "\n")})
 	}
 	w.Write(table.Bytes())
+}
+
+func extractProjectName(a app, env Environment) (string, error) {
+	partsName := env.nameRegexp().FindStringSubmatch(a.Name)
+	partsDNS := env.dnsRegexp().FindStringSubmatch(a.CName[0])
+	if len(partsName) == 2 && len(partsDNS) == 2 && partsName[1] == partsDNS[1] {
+		return partsDNS[1], nil
+	}
+	return "", errors.New("not a tranor project")
 }
 
 type projectSlice []struct {

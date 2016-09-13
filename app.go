@@ -18,16 +18,18 @@ import (
 )
 
 type createAppOptions struct {
-	name     string
-	platform string
-	team     string
-	plan     string
-	pool     string
+	name        string
+	description string
+	platform    string
+	team        string
+	plan        string
+	pool        string
 }
 
 func (o *createAppOptions) encode() string {
 	values := make(url.Values)
 	values.Set("name", o.name)
+	values.Set("description", o.description)
 	values.Set("platform", o.platform)
 	values.Set("plan", o.plan)
 	values.Set("teamOwner", o.team)

@@ -36,11 +36,12 @@ func TestCreateApp(t *testing.T) {
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
 	app, err := createApp(client, createAppOptions{
-		name:     "app",
-		plan:     "medium",
-		platform: "python",
-		pool:     "mypool",
-		team:     "admin",
+		name:        "app",
+		description: "my nice app",
+		plan:        "medium",
+		platform:    "python",
+		pool:        "mypool",
+		team:        "admin",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -57,11 +58,12 @@ func TestCreateApp(t *testing.T) {
 		t.Errorf("wrong path. Want /1.0/apps. Got %s", req.URL.Path)
 	}
 	expectedParams := url.Values(map[string][]string{
-		"name":      {"app"},
-		"plan":      {"medium"},
-		"platform":  {"python"},
-		"pool":      {"mypool"},
-		"teamOwner": {"admin"},
+		"name":        {"app"},
+		"description": {"my nice app"},
+		"plan":        {"medium"},
+		"platform":    {"python"},
+		"pool":        {"mypool"},
+		"teamOwner":   {"admin"},
 	})
 	gotParams, err := url.ParseQuery(string(fakeServer.payloads[0]))
 	if err != nil {

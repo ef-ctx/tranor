@@ -21,12 +21,13 @@ import (
 )
 
 type projectCreate struct {
-	fs       *gnuflag.FlagSet
-	name     string
-	platform string
-	team     string
-	plan     string
-	envs     commaSeparatedFlag
+	fs          *gnuflag.FlagSet
+	name        string
+	platform    string
+	team        string
+	plan        string
+	description string
+	envs        commaSeparatedFlag
 }
 
 func (*projectCreate) Info() *cmd.Info {
@@ -74,6 +75,8 @@ func (c *projectCreate) Flags() *gnuflag.FlagSet {
 		c.fs = gnuflag.NewFlagSet("project-create", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.name, "name", "", "name of the project")
 		c.fs.StringVar(&c.name, "n", "", "name of the project")
+		c.fs.StringVar(&c.description, "description", "", "description of the project")
+		c.fs.StringVar(&c.description, "d", "", "description of the project")
 		c.fs.StringVar(&c.platform, "platform", "", "platform of the project")
 		c.fs.StringVar(&c.platform, "l", "", "platform of the project")
 		c.fs.StringVar(&c.team, "team", "", "team that owns the project")
@@ -101,11 +104,12 @@ func (c *projectCreate) createApps(envs []Environment, client *cmd.Client) ([]ma
 	for _, env := range envs {
 		appName := fmt.Sprintf("%s-%s", c.name, env.Name)
 		a, err := createApp(client, createAppOptions{
-			name:     appName,
-			plan:     c.plan,
-			platform: c.platform,
-			pool:     env.poolName(),
-			team:     c.team,
+			name:        appName,
+			description: c.description,
+			plan:        c.plan,
+			platform:    c.platform,
+			pool:        env.poolName(),
+			team:        c.team,
 		})
 		if err != nil {
 			deleteApps(apps, client, ioutil.Discard)

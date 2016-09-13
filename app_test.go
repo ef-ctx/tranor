@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -273,6 +274,7 @@ func TestLastDeploy(t *testing.T) {
 	}
 	expectedDeployment := deploy{
 		ID:        "57ccc9490640fd3def98b157",
+		Commit:    "40244ff2866eba7e2da6eee8a6fc51464c9f604f",
 		Image:     "v938",
 		Timestamp: time.Date(2016, 9, 5, 1, 24, 25, 706e6, time.UTC),
 	}
@@ -316,5 +318,74 @@ func TestLastDeployNoTarget(t *testing.T) {
 	_, err = lastDeploy(nil, "myapp")
 	if err == nil {
 		t.Error("unexpected <nil> error")
+	}
+}
+
+func TestGetApp(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps/proj1-prod",
+		code:    http.StatusOK,
+		payload: []byte(appInfo4),
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	a, err := getApp(client, "proj1-prod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedApp app
+	err = json.Unmarshal([]byte(appInfo4), &expectedApp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(a, expectedApp) {
+		t.Errorf("wrong app returned\nwant %#v\ngot  %#v", expectedApp, a)
+	}
+}
+
+func TestGetAppNotFound(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		method: "GET",
+		path:   "/apps/proj1-prod",
+		code:   http.StatusNotFound,
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	a, err := getApp(client, "proj1-prod")
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	if !reflect.DeepEqual(a, app{}) {
+		t.Errorf("go non-empty app: %#v", a)
+	}
+}
+
+func TestGetAppNoTarget(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	_, err = getApp(nil, "proj1-prod")
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
 	}
 }

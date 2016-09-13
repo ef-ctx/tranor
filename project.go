@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -271,17 +272,27 @@ func (c *projectInfo) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(ctx.Stdout, "Project name: %s\n\n", c.name)
+	fmt.Fprintf(ctx.Stdout, "Project name: %s\n", c.name)
+	fmt.Fprintf(ctx.Stdout, "Description: %s\n", apps[0].Description)
+	fmt.Fprintf(ctx.Stdout, "Repository: %s\n", apps[0].RepositoryURL)
+	fmt.Fprintf(ctx.Stdout, "Platform: %s\n", apps[0].Platform)
+	fmt.Fprintf(ctx.Stdout, "Teams: %s\n", strings.Join(apps[0].Teams, ", "))
+	fmt.Fprintf(ctx.Stdout, "Owner: %s\n", apps[0].Owner)
+	fmt.Fprintf(ctx.Stdout, "Team owner: %s\n", apps[0].TeamOwner)
 	var envs cmd.Table
-	envs.Headers = cmd.Row{"Environment", "Address", "Image", "Deploy date"}
+	envs.Headers = cmd.Row{"Environment", "Address", "Image", "Git hash/tag", "Deploy date", "Units"}
 	for _, app := range apps {
-		row := cmd.Row{app.Env.Name, app.Addr, "", ""}
+		row := cmd.Row{app.Env.Name, app.Addr, "", "", "", strconv.Itoa(len(app.Units))}
 		if deploy, err := lastDeploy(client, app.Name); err == nil && deploy.Image != "" {
 			row[2] = deploy.Image
-			row[3] = deploy.Timestamp.Format(time.RFC1123)
+			row[4] = deploy.Timestamp.Format(time.RFC1123)
+			if deploy.Commit != "" {
+				row[3] = fmt.Sprintf("(git) %s", deploy.Commit)
+			}
 		}
 		envs.AddRow(row)
 	}
+	fmt.Fprintln(ctx.Stdout)
 	ctx.Stdout.Write(envs.Bytes())
 	return nil
 }
@@ -309,6 +320,10 @@ func (c *projectInfo) projectApps(client *cmd.Client) ([]app, error) {
 				continue
 			}
 			if projectName == c.name {
+				app, err = getApp(client, app.Name)
+				if err != nil {
+					return nil, err
+				}
 				app.Addr = app.CName[0]
 				app.Env = env
 				projectApps = append(projectApps, app)

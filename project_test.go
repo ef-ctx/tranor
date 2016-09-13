@@ -766,6 +766,20 @@ func TestProjectInfo(t *testing.T) {
 			payload: nil,
 		})
 	}
+	appRespMap := map[string][]byte{
+		"proj1-dev":   []byte(appInfo1),
+		"proj1-qa":    []byte(appInfo2),
+		"proj1-stage": []byte(appInfo3),
+		"proj1-prod":  []byte(appInfo4),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
 	cleanup, err := setupFakeTarget(server.url())
 	if err != nil {
 		t.Fatal(err)
@@ -783,13 +797,19 @@ func TestProjectInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	table := cmd.Table{Headers: cmd.Row([]string{"Environment", "Address", "Image", "Deploy date"})}
-	expectedOutput := "Project name: proj1\n\n"
+	table := cmd.Table{Headers: cmd.Row([]string{"Environment", "Address", "Image", "Git hash/tag", "Deploy date", "Units"})}
+	expectedOutput := `Project name: proj1
+Description: my nice project
+Repository: git@example.com:proj1-dev.git
+Platform: python
+Teams: admin, sysop
+Owner: webmaster@example.com
+Team owner: admin` + "\n\n"
 	rows := []cmd.Row{
-		{"dev", "proj1.dev.example.com", "v938", "Mon, 05 Sep 2016 01:24:25 UTC"},
-		{"qa", "proj1.qa.example.com", "", ""},
-		{"stage", "proj1.stage.example.com", "", ""},
-		{"prod", "proj1.example.com", "", ""},
+		{"dev", "proj1.dev.example.com", "v938", "(git) 40244ff2866eba7e2da6eee8a6fc51464c9f604f", "Mon, 05 Sep 2016 01:24:25 UTC", "1"},
+		{"qa", "proj1.qa.example.com", "", "", "", "2"},
+		{"stage", "proj1.stage.example.com", "", "", "", "2"},
+		{"prod", "proj1.example.com", "", "", "", "5"},
 	}
 	for _, row := range rows {
 		table.AddRow(row)

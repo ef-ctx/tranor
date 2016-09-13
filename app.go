@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -105,15 +106,7 @@ func listApps(client *cmd.Client, filters map[string]string) ([]app, error) {
 
 func lastDeploy(client *cmd.Client, appName string) (deploy, error) {
 	var d deploy
-	url, err := cmd.GetURL("/deploys?limit=1&app=" + appName)
-	if err != nil {
-		return d, err
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return d, err
-	}
-	resp, err := client.Do(req)
+	resp, err := doReq(client, "/deploys?limit=1&app="+appName)
 	if err != nil {
 		return d, err
 	}
@@ -132,16 +125,49 @@ func lastDeploy(client *cmd.Client, appName string) (deploy, error) {
 	return d, nil
 }
 
+func getApp(client *cmd.Client, appName string) (app, error) {
+	var a app
+	resp, err := doReq(client, "/apps/"+appName)
+	if err != nil {
+		return a, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return a, errors.New("app not found")
+	}
+	err = json.NewDecoder(resp.Body).Decode(&a)
+	return a, err
+}
+
+func doReq(client *cmd.Client, path string) (*http.Response, error) {
+	url, err := cmd.GetURL(path)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return client.Do(req)
+}
+
 type app struct {
-	Name          string   `json:"name"`
-	CName         []string `json:"cname"`
-	RepositoryURL string
+	Name          string        `json:"name"`
+	CName         []string      `json:"cname"`
+	Description   string        `json:"description"`
+	RepositoryURL string        `json:"repository"`
+	Platform      string        `json:"platform"`
+	Teams         []string      `json:"teams"`
+	Owner         string        `json:"owner"`
+	TeamOwner     string        `json:"teamowner"`
+	Units         []interface{} `json:"units"`
 	Env           Environment
 	Addr          string
 }
 
 type deploy struct {
 	ID        string
+	Commit    string
 	Timestamp time.Time
 	Image     string
 }

@@ -161,7 +161,7 @@ Git repository: git@git.example.com:myproj-dev.git
 			"platform":    []string{"python"},
 			"plan":        []string{"medium"},
 			"teamOwner":   []string{"myteam"},
-			"pool":        []string{"dev/dev.example.com"},
+			"pool":        []string{`dev\dev.example.com`},
 		},
 		{
 			"name":        []string{"myproj-qa"},
@@ -169,7 +169,7 @@ Git repository: git@git.example.com:myproj-dev.git
 			"platform":    []string{"python"},
 			"plan":        []string{"medium"},
 			"teamOwner":   []string{"myteam"},
-			"pool":        []string{"qa/qa.example.com"},
+			"pool":        []string{`qa\qa.example.com`},
 		},
 		{
 			"name":        []string{"myproj-stage"},
@@ -177,7 +177,7 @@ Git repository: git@git.example.com:myproj-dev.git
 			"platform":    []string{"python"},
 			"plan":        []string{"medium"},
 			"teamOwner":   []string{"myteam"},
-			"pool":        []string{"stage/stage.example.com"},
+			"pool":        []string{`stage\stage.example.com`},
 		},
 		{
 			"name":        []string{"myproj-prod"},
@@ -185,7 +185,7 @@ Git repository: git@git.example.com:myproj-dev.git
 			"platform":    []string{"python"},
 			"plan":        []string{"medium"},
 			"teamOwner":   []string{"myteam"},
-			"pool":        []string{"prod/example.com"},
+			"pool":        []string{`prod\example.com`},
 		},
 		{"cname": []string{"myproj.dev.example.com"}},
 		{"cname": []string{"myproj.qa.example.com"}},
@@ -277,7 +277,7 @@ Git repository: git@git.example.com:superproj-dev.git
 			"platform":    []string{"python"},
 			"plan":        []string{"medium"},
 			"teamOwner":   []string{"myteam"},
-			"pool":        []string{"dev/dev.example.com"},
+			"pool":        []string{`dev\dev.example.com`},
 		},
 		{
 			"name":        []string{"superproj-prod"},
@@ -285,7 +285,7 @@ Git repository: git@git.example.com:superproj-dev.git
 			"platform":    []string{"python"},
 			"plan":        []string{"medium"},
 			"teamOwner":   []string{"myteam"},
-			"pool":        []string{"prod/example.com"},
+			"pool":        []string{`prod\example.com`},
 		},
 		{"cname": []string{"superproj.dev.example.com"}},
 		{"cname": []string{"superproj.example.com"}},

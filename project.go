@@ -256,6 +256,7 @@ type projectInfo struct {
 func (c *projectInfo) Info() *cmd.Info {
 	return &cmd.Info{
 		Name: "project-info",
+		Desc: "Retrieves and displays information about the given project",
 	}
 }
 
@@ -328,6 +329,7 @@ type projectList struct{}
 func (c *projectList) Info() *cmd.Info {
 	return &cmd.Info{
 		Name: "project-list",
+		Desc: "List the projects on tranor that you has access to",
 	}
 }
 

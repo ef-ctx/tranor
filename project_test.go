@@ -583,9 +583,13 @@ func TestRemoveProject(t *testing.T) {
 			t.Errorf("wrong path\nwant %q\ngot  %q", expectedPaths[i], p)
 		}
 	}
-	expectedOutput := "Project successfully removed!\n"
+	expectedOutput := `Deleting from env "dev"... ok
+Deleting from env "qa"... ok
+Deleting from env "stage"... ok
+Deleting from env "prod"... ok
+`
 	if stdout.String() != expectedOutput {
-		t.Errorf("wrong output\nwant %q\ngot  %q", expectedOutput, stdout.String())
+		t.Errorf("Wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
 	}
 }
 

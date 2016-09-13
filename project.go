@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sort"
@@ -54,11 +55,11 @@ func (c *projectCreate) Run(ctx *cmd.Context, client *cmd.Client) error {
 	}
 	err = c.setCNames(apps, client)
 	if err != nil {
-		appNames := make([]string, len(apps))
-		for i, app := range apps {
-			appNames[i] = app["name"]
+		appObjs := make([]app, len(apps))
+		for i, a := range apps {
+			appObjs[i] = app{Name: a["name"]}
 		}
-		deleteApps(appNames, client)
+		deleteApps(appObjs, client, ioutil.Discard)
 		return fmt.Errorf("failed to configure project %q: %s", c.name, err)
 	}
 	fmt.Fprintf(ctx.Stdout, "successfully created the project %q!\n", c.name)
@@ -96,10 +97,10 @@ func (c *projectCreate) defaultEnvs() string {
 
 func (c *projectCreate) createApps(envs []Environment, client *cmd.Client) ([]map[string]string, error) {
 	createdApps := make([]map[string]string, 0, len(envs))
-	appNames := make([]string, 0, len(envs))
+	apps := make([]app, 0, len(envs))
 	for _, env := range envs {
 		appName := fmt.Sprintf("%s-%s", c.name, env.Name)
-		app, err := createApp(client, createAppOptions{
+		a, err := createApp(client, createAppOptions{
 			name:     appName,
 			plan:     c.plan,
 			platform: c.platform,
@@ -107,13 +108,13 @@ func (c *projectCreate) createApps(envs []Environment, client *cmd.Client) ([]ma
 			team:     c.team,
 		})
 		if err != nil {
-			deleteApps(appNames, client)
+			deleteApps(apps, client, ioutil.Discard)
 			return nil, fmt.Errorf("failed to create the project in env %q: %s", env.Name, err)
 		}
-		app["name"] = appName
-		app["dnsSuffix"] = env.DNSSuffix
-		createdApps = append(createdApps, app)
-		appNames = append(appNames, appName)
+		a["name"] = appName
+		a["dnsSuffix"] = env.DNSSuffix
+		createdApps = append(createdApps, a)
+		apps = append(apps, app{Name: appName})
 	}
 	return createdApps, nil
 }
@@ -215,12 +216,11 @@ func (c *projectRemove) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if !c.Confirm(ctx, fmt.Sprintf("Are you sure you want to remove the project %q?", c.name)) {
 		return nil
 	}
-	envNames := config.envNames()
-	appNames := make([]string, len(envNames))
-	for i, envName := range envNames {
-		appNames[i] = fmt.Sprintf("%s-%s", c.name, envName)
+	apps := make([]app, len(config.Environments))
+	for i, env := range config.Environments {
+		apps[i] = app{Name: fmt.Sprintf("%s-%s", c.name, env.Name), Env: env}
 	}
-	errs, err := deleteApps(appNames, client)
+	errs, err := deleteApps(apps, client, ctx.Stdout)
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,6 @@ func (c *projectRemove) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if notFound == len(errs) {
 		return errors.New("project not found")
 	}
-	fmt.Fprintln(ctx.Stdout, "Project successfully removed!")
 	return nil
 }
 

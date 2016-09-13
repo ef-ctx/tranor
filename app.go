@@ -6,6 +6,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -52,10 +55,11 @@ func createApp(client *cmd.Client, opts createAppOptions) (map[string]string, er
 	return app, err
 }
 
-func deleteApps(apps []string, client *cmd.Client) ([]error, error) {
+func deleteApps(apps []app, client *cmd.Client, w io.Writer) ([]error, error) {
 	var errs []error
 	for _, app := range apps {
-		url, err := cmd.GetURL("/apps/" + app)
+		fmt.Fprintf(w, "Deleting from env %q... ", app.Env.Name)
+		url, err := cmd.GetURL("/apps/" + app.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -64,8 +68,9 @@ func deleteApps(apps []string, client *cmd.Client) ([]error, error) {
 			return nil, err
 		}
 		resp, err := client.Do(req)
-		resp.Body.Close()
 		errs = append(errs, err)
+		cmd.StreamJSONResponse(ioutil.Discard, resp)
+		fmt.Fprintln(w, "ok")
 	}
 	return errs, nil
 }
@@ -126,10 +131,11 @@ func lastDeploy(client *cmd.Client, appName string) (deploy, error) {
 }
 
 type app struct {
-	Name  string   `json:"name"`
-	CName []string `json:"cname"`
-	Env   Environment
-	Addr  string
+	Name          string   `json:"name"`
+	CName         []string `json:"cname"`
+	RepositoryURL string
+	Env           Environment
+	Addr          string
 }
 
 type deploy struct {

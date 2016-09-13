@@ -109,7 +109,11 @@ func TestDeleteApps(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	errs, err := deleteApps([]string{"proj1-dev", "proj1-qa", "proj1-prod"}, client)
+	errs, err := deleteApps([]app{
+		{Name: "proj1-dev", Env: Environment{Name: "dev"}},
+		{Name: "proj1-qa", Env: Environment{Name: "qa"}},
+		{Name: "proj1-prod", Env: Environment{Name: "prod"}},
+	}, client, &stdout)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,6 +130,13 @@ func TestDeleteApps(t *testing.T) {
 			t.Errorf("wrong path\nwant %q\ngot  %q", paths[i], req.URL.Path)
 		}
 	}
+	expectedOutput := `Deleting from env "dev"... ok
+Deleting from env "qa"... ok
+Deleting from env "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nWant:\n%s\nGot\n%s", expectedOutput, stdout.String())
+	}
 }
 
 func TestDeleteAppsNoTarget(t *testing.T) {
@@ -135,7 +146,7 @@ func TestDeleteAppsNoTarget(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 	os.Setenv("HOME", dir)
-	errs, err := deleteApps([]string{"app1", "app2"}, nil)
+	errs, err := deleteApps([]app{{Name: "app1"}, {Name: "app2"}}, nil, ioutil.Discard)
 	if len(errs) != 0 {
 		t.Errorf("unexpected non-empty error list: %#v", errs)
 	}

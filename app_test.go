@@ -91,6 +91,94 @@ func TestCreateAppNoTarget(t *testing.T) {
 	}
 }
 
+func TestUpdateApp(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "PUT",
+		path:    "/apps/myapp",
+		code:    http.StatusOK,
+		payload: []byte(`{"repository_url":"git@example.com:app.git"}`),
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = updateApp(client, createAppOptions{
+		name:        "myapp",
+		description: "my nice app - updated!",
+		plan:        "medium",
+		platform:    "",
+		pool:        "mypool",
+		team:        "admin",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedParams := url.Values(map[string][]string{
+		"name":        {"myapp"},
+		"description": {"my nice app - updated!"},
+		"plan":        {"medium"},
+		"platform":    {""},
+		"pool":        {"mypool"},
+		"teamOwner":   {"admin"},
+	})
+	gotParams, err := url.ParseQuery(string(fakeServer.payloads[0]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(gotParams, expectedParams) {
+		t.Errorf("wrong params in body\nwant %#v\ngot  %#v", expectedParams, gotParams)
+	}
+}
+
+func TestUpdateAppNotFound(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "PUT",
+		path:    "/apps/myapp",
+		code:    http.StatusNotFound,
+		payload: []byte("app not found"),
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = updateApp(client, createAppOptions{
+		name:        "myapp",
+		description: "my nice app - updated!",
+		plan:        "medium",
+		platform:    "",
+		pool:        "mypool",
+		team:        "admin",
+	})
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestUpdateAppNoTarget(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	err = updateApp(nil, createAppOptions{})
+	if err == nil {
+		t.Error("unexpected <nil> error")
+	}
+}
+
 func TestDeleteApps(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()

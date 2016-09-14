@@ -57,6 +57,24 @@ func createApp(client *cmd.Client, opts createAppOptions) (map[string]string, er
 	return app, err
 }
 
+func updateApp(client *cmd.Client, opts createAppOptions) error {
+	url, err := cmd.GetURL("/apps/" + opts.name)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("PUT", url, strings.NewReader(opts.encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	cmd.StreamJSONResponse(ioutil.Discard, resp)
+	return nil
+}
+
 func deleteApps(apps []app, client *cmd.Client, w io.Writer) ([]error, error) {
 	var errs []error
 	for _, app := range apps {

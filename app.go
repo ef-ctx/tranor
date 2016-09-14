@@ -6,7 +6,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -132,9 +131,6 @@ func getApp(client *cmd.Client, appName string) (app, error) {
 		return a, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotFound {
-		return a, errors.New("app not found")
-	}
 	err = json.NewDecoder(resp.Body).Decode(&a)
 	return a, err
 }

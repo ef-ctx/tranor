@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/tsuru/gnuflag"
+	"github.com/tsuru/tsuru-client/tsuru/client"
 	"github.com/tsuru/tsuru/cmd"
 )
 
@@ -915,6 +916,88 @@ func TestProjectInfoMissingName(t *testing.T) {
 	expectedMsg := "please provide the name of the project"
 	if err.Error() != expectedMsg {
 		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
+func TestProjectEnvInfo(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps/proj1-prod",
+		code:    http.StatusOK,
+		payload: []byte(appInfo4),
+	})
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps/proj1-prod/quota",
+		code:    http.StatusOK,
+		payload: []byte(`{"Limit":10,"InUse":1}`),
+	})
+	fakeServer.prepareResponse(preparedResponse{
+		method: "GET",
+		path:   "/services/instances?app=proj1-prod",
+		code:   http.StatusNoContent,
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	cli := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	var buf bytes.Buffer
+	var appInfoCmd client.AppInfo
+	err = appInfoCmd.Flags().Parse(true, []string{"-a", "proj1-prod"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = appInfoCmd.Run(&cmd.Context{Stdout: &buf}, cli)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectEnvInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1", "-e", "prod"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, cli)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stdout.String() != buf.String() {
+		t.Errorf("Wrong output\nWant:\n%s\nGot:\n%s", &buf, &stdout)
+	}
+}
+
+func TestProjectEnvInfoMissingName(t *testing.T) {
+	var c projectEnvInfo
+	err := c.Flags().Parse(true, []string{"-e", "prod"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	cli := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, cli)
+	if err == nil {
+		t.Fatal("got unexpected <nil> error")
+	}
+}
+
+func TestProjectEnvInfoMissingEnv(t *testing.T) {
+	var c projectEnvInfo
+	err := c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	cli := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, cli)
+	if err == nil {
+		t.Fatal("got unexpected <nil> error")
 	}
 }
 

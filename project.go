@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/tsuru/gnuflag"
+	"github.com/tsuru/tsuru-client/tsuru/client"
 	"github.com/tsuru/tsuru/cmd"
 	tsuruerrors "github.com/tsuru/tsuru/errors"
 )
@@ -338,6 +339,40 @@ func (c *projectInfo) Flags() *gnuflag.FlagSet {
 		c.fs = gnuflag.NewFlagSet("project-info", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.name, "name", "", "Name of the project")
 		c.fs.StringVar(&c.name, "n", "", "Name of the project")
+	}
+	return c.fs
+}
+
+type projectEnvInfo struct {
+	envName string
+	name    string
+	fs      *gnuflag.FlagSet
+}
+
+func (c *projectEnvInfo) Info() *cmd.Info {
+	return &cmd.Info{
+		Name: "project-env-info",
+		Desc: "Displays information about a project in a specific environment",
+	}
+}
+
+func (c *projectEnvInfo) Run(ctx *cmd.Context, cli *cmd.Client) error {
+	if c.name == "" || c.envName == "" {
+		return errors.New("please provide the project name and the environment")
+	}
+	appName := fmt.Sprintf("%s-%s", c.name, c.envName)
+	var appInfo client.AppInfo
+	appInfo.Flags().Parse(true, []string{"--app", appName})
+	return appInfo.Run(ctx, cli)
+}
+
+func (c *projectEnvInfo) Flags() *gnuflag.FlagSet {
+	if c.fs == nil {
+		c.fs = gnuflag.NewFlagSet("project-env-info", gnuflag.ExitOnError)
+		c.fs.StringVar(&c.name, "name", "", "name of the project")
+		c.fs.StringVar(&c.name, "n", "", "name of the project")
+		c.fs.StringVar(&c.envName, "env", "", "name of the environment")
+		c.fs.StringVar(&c.envName, "e", "", "name of the environment")
 	}
 	return c.fs
 }

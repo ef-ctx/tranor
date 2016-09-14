@@ -146,6 +146,17 @@ func TestProjectInfoIsRegistered(t *testing.T) {
 	}
 }
 
+func TestProjectEnvInfoIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-env-info"]
+	if !ok {
+		t.Error("command project-env-info not found")
+	}
+	if _, ok := gotCommand.(*projectEnvInfo); !ok {
+		t.Errorf("command %#v is not of type projectEnvInfo{}", gotCommand)
+	}
+}
+
 func TestProjectListIsRegistered(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["project-list"]

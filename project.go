@@ -161,6 +161,44 @@ func (c *projectCreate) getEnvironmentsByName(envs []Environment, names []string
 	return filtered
 }
 
+type projectUpdate struct {
+	fs          *gnuflag.FlagSet
+	name        string
+	team        string
+	plan        string
+	description string
+	addEnvs     commaSeparatedFlag
+	removeEnvs  commaSeparatedFlag
+}
+
+func (c *projectUpdate) Info() *cmd.Info {
+	return &cmd.Info{
+		Name: "project-update",
+		Desc: "Updates the given project",
+	}
+}
+
+func (c *projectUpdate) Run(ctx *cmd.Context, client *cmd.Client) error {
+	return nil
+}
+
+func (c *projectUpdate) Flags() *gnuflag.FlagSet {
+	if c.fs == nil {
+		c.fs = gnuflag.NewFlagSet("project-create", gnuflag.ExitOnError)
+		c.fs.StringVar(&c.name, "name", "", "name of the project")
+		c.fs.StringVar(&c.name, "n", "", "name of the project")
+		c.fs.StringVar(&c.description, "description", "", "description of the project")
+		c.fs.StringVar(&c.description, "d", "", "description of the project")
+		c.fs.StringVar(&c.team, "team", "", "team that owns the project")
+		c.fs.StringVar(&c.team, "t", "", "team that owns the project")
+		c.fs.StringVar(&c.plan, "plan", "", "plan to use for the project")
+		c.fs.StringVar(&c.plan, "p", "", "plan to use for the project")
+		c.fs.Var(&c.addEnvs, "add-envs", "comma-separated list of environments to add to the project")
+		c.fs.Var(&c.removeEnvs, "remove-envs", "comma-separated list of environments to remove from the project")
+	}
+	return c.fs
+}
+
 type commaSeparatedFlag struct {
 	values []string
 }

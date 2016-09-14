@@ -29,6 +29,7 @@ func buildManager(name string) *cmd.Manager {
 	mngr.Register(&client.TeamRemove{})
 	mngr.Register(&client.PlanList{})
 	mngr.Register(&projectCreate{})
+	mngr.Register(&projectUpdate{})
 	mngr.Register(&projectRemove{})
 	mngr.Register(&projectList{})
 	mngr.Register(&projectInfo{})

@@ -215,6 +215,7 @@ func (c *projectRemove) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.name == "" {
 		return errors.New("please provide the name of the project")
 	}
+	ctx.RawOutput()
 	config, err := loadConfigFile()
 	if err != nil {
 		return errors.New("unable to load environments file, please make sure that tranor is properly configured")

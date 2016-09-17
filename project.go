@@ -51,12 +51,17 @@ func (c *projectCreate) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if err != nil {
 		return fmt.Errorf("failed to load environments: %s", err)
 	}
-	envs := c.getEnvironmentsByName(config.Environments, c.envs.Values())
-	apps, err := c.createApps(envs, client)
+	envs := getEnvironmentsByName(config.Environments, c.envs.Values())
+	apps, err := createApps(envs, client, c.name, createAppOptions{
+		description: c.description,
+		plan:        c.plan,
+		platform:    c.platform,
+		team:        c.team,
+	})
 	if err != nil {
 		return err
 	}
-	err = c.setCNames(apps, client)
+	err = setCNames(apps, client, c.name)
 	if err != nil {
 		appObjs := make([]app, len(apps))
 		for i, a := range apps {
@@ -100,67 +105,6 @@ func (c *projectCreate) defaultEnvs() string {
 	return strings.Join(envNames, ",")
 }
 
-func (c *projectCreate) createApps(envs []Environment, client *cmd.Client) ([]map[string]string, error) {
-	createdApps := make([]map[string]string, 0, len(envs))
-	apps := make([]app, 0, len(envs))
-	for _, env := range envs {
-		appName := fmt.Sprintf("%s-%s", c.name, env.Name)
-		a, err := createApp(client, createAppOptions{
-			name:        appName,
-			description: c.description,
-			plan:        c.plan,
-			platform:    c.platform,
-			pool:        env.poolName(),
-			team:        c.team,
-		})
-		if err != nil {
-			deleteApps(apps, client, ioutil.Discard)
-			return nil, fmt.Errorf("failed to create the project in env %q: %s", env.Name, err)
-		}
-		a["name"] = appName
-		a["dnsSuffix"] = env.DNSSuffix
-		createdApps = append(createdApps, a)
-		apps = append(apps, app{Name: appName})
-	}
-	return createdApps, nil
-}
-
-func (c *projectCreate) setCNames(apps []map[string]string, client *cmd.Client) error {
-	for _, app := range apps {
-		reqURL, err := cmd.GetURL(fmt.Sprintf("/apps/%s/cname", app["name"]))
-		if err != nil {
-			return err
-		}
-		cname := fmt.Sprintf("%s.%s", c.name, app["dnsSuffix"])
-		v := make(url.Values)
-		v.Set("cname", cname)
-		req, err := http.NewRequest("POST", reqURL, strings.NewReader(v.Encode()))
-		if err != nil {
-			return err
-		}
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-		resp.Body.Close()
-	}
-	return nil
-}
-
-func (c *projectCreate) getEnvironmentsByName(envs []Environment, names []string) []Environment {
-	var filtered []Environment
-	for _, e := range envs {
-		for _, name := range names {
-			if e.Name == name {
-				filtered = append(filtered, e)
-				break
-			}
-		}
-	}
-	return filtered
-}
-
 type projectUpdate struct {
 	fs          *gnuflag.FlagSet
 	name        string
@@ -179,7 +123,121 @@ func (c *projectUpdate) Info() *cmd.Info {
 }
 
 func (c *projectUpdate) Run(ctx *cmd.Context, client *cmd.Client) error {
+	if c.name == "" {
+		return errors.New("please provide the name of the project")
+	}
+	config, err := loadConfigFile()
+	if err != nil {
+		return errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
+	apps, err := projectApps(client, c.name)
+	if err != nil {
+		return err
+	}
+	err = c.validateEnvsToAdd(apps, config)
+	if err != nil {
+		return err
+	}
+	appsToUpdate, appsToRemove, err := c.validateEnvsToRemove(apps)
+	if err != nil {
+		return err
+	}
+	opts := c.baseOpts(apps[0])
+	envsToAdd := getEnvironmentsByName(config.Environments, c.addEnvs.Values())
+	fmt.Fprintln(ctx.Stdout, "adding new environments...")
+	appMaps, err := createApps(envsToAdd, client, c.name, opts)
+	if err != nil {
+		return err
+	}
+	err = setCNames(appMaps, client, c.name)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintln(ctx.Stdout, "removing old environments...")
+	_, err = deleteApps(appsToRemove, client, ctx.Stdout)
+	if err != nil {
+		return err
+	}
+	if c.plan != "" || c.team != "" || c.description != "" {
+		for _, a := range appsToUpdate {
+			opts.name = a.Name
+			opts.pool = a.Pool
+			err = updateApp(client, opts)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
+}
+
+func (c *projectUpdate) baseOpts(a app) createAppOptions {
+	opts := createAppOptions{
+		description: a.Description,
+		plan:        a.Plan.Name,
+		platform:    a.Platform,
+		pool:        a.Pool,
+		team:        a.TeamOwner,
+	}
+	if c.description != "" {
+		opts.description = c.description
+	}
+	if c.plan != "" {
+		opts.plan = c.plan
+	}
+	if c.team != "" {
+		opts.team = c.team
+	}
+	return opts
+}
+
+func (c *projectUpdate) validateEnvsToAdd(apps []app, config *Config) error {
+	err := c.addEnvs.validate(config.envNames())
+	if err != nil {
+		return err
+	}
+	for _, envName := range c.addEnvs.Values() {
+		for _, a := range apps {
+			if a.Env.Name == envName {
+				return fmt.Errorf("env %q is already defined in this project", envName)
+			}
+		}
+	}
+	return nil
+}
+
+func (c *projectUpdate) validateEnvsToRemove(apps []app) ([]app, []app, error) {
+	var (
+		appsToUpdate    []app
+		appsToRemove    []app
+		indexesToRemove []int
+	)
+	for _, envName := range c.removeEnvs.Values() {
+		oldLen := len(appsToRemove)
+		for i, a := range apps {
+			if a.Env.Name == envName {
+				appsToRemove = append(appsToRemove, a)
+				indexesToRemove = append(indexesToRemove, i)
+				break
+			}
+		}
+		if len(appsToRemove) == oldLen {
+			return nil, nil, fmt.Errorf("env %q is not defined in this project", envName)
+		}
+	}
+	for i := range apps {
+		var found bool
+		for _, index := range indexesToRemove {
+			if index == i {
+				found = true
+				break
+			}
+		}
+		if !found {
+			appsToUpdate = append(appsToUpdate, apps[i])
+		}
+	}
+	return appsToUpdate, appsToRemove, nil
 }
 
 func (c *projectUpdate) Flags() *gnuflag.FlagSet {
@@ -308,7 +366,7 @@ func (c *projectInfo) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.name == "" {
 		return errors.New("please provide the name of the project")
 	}
-	apps, err := c.projectApps(client)
+	apps, err := projectApps(client, c.name)
 	if err != nil {
 		return err
 	}
@@ -335,42 +393,6 @@ func (c *projectInfo) Run(ctx *cmd.Context, client *cmd.Client) error {
 	fmt.Fprintln(ctx.Stdout)
 	ctx.Stdout.Write(envs.Bytes())
 	return nil
-}
-
-func (c *projectInfo) projectApps(client *cmd.Client) ([]app, error) {
-	config, err := loadConfigFile()
-	if err != nil {
-		return nil, errors.New("unable to load environments file, please make sure that tranor is properly configured")
-	}
-	apps, err := listApps(client, map[string]string{"name": "^" + c.name})
-	if err != nil {
-		return nil, err
-	}
-	if len(apps) == 0 {
-		return nil, errors.New("project not found")
-	}
-	var projectApps []app
-	for _, env := range config.Environments {
-		for _, app := range apps {
-			if len(app.CName) != 1 {
-				continue
-			}
-			projectName, err := extractProjectName(app, env)
-			if err != nil {
-				continue
-			}
-			if projectName == c.name {
-				app, err = getApp(client, app.Name)
-				if err != nil {
-					return nil, err
-				}
-				app.Addr = app.CName[0]
-				app.Env = env
-				projectApps = append(projectApps, app)
-			}
-		}
-	}
-	return projectApps, nil
 }
 
 func (c *projectInfo) Flags() *gnuflag.FlagSet {
@@ -475,6 +497,97 @@ func (c *projectList) render(w io.Writer, projects map[string][]app) {
 		table.AddRow(cmd.Row{project.Name, strings.Join(envNames, "\n"), strings.Join(addresses, "\n")})
 	}
 	w.Write(table.Bytes())
+}
+
+func createApps(envs []Environment, client *cmd.Client, projectName string, opts createAppOptions) ([]map[string]string, error) {
+	createdApps := make([]map[string]string, 0, len(envs))
+	apps := make([]app, 0, len(envs))
+	for _, env := range envs {
+		opts.name = fmt.Sprintf("%s-%s", projectName, env.Name)
+		opts.pool = env.poolName()
+		a, err := createApp(client, opts)
+		if err != nil {
+			deleteApps(apps, client, ioutil.Discard)
+			return nil, fmt.Errorf("failed to create the project in env %q: %s", env.Name, err)
+		}
+		a["name"] = opts.name
+		a["dnsSuffix"] = env.DNSSuffix
+		createdApps = append(createdApps, a)
+		apps = append(apps, app{Name: opts.name})
+	}
+	return createdApps, nil
+}
+
+func setCNames(apps []map[string]string, client *cmd.Client, projectName string) error {
+	for _, app := range apps {
+		reqURL, err := cmd.GetURL(fmt.Sprintf("/apps/%s/cname", app["name"]))
+		if err != nil {
+			return err
+		}
+		cname := fmt.Sprintf("%s.%s", projectName, app["dnsSuffix"])
+		v := make(url.Values)
+		v.Set("cname", cname)
+		req, err := http.NewRequest("POST", reqURL, strings.NewReader(v.Encode()))
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		resp.Body.Close()
+	}
+	return nil
+}
+
+func projectApps(client *cmd.Client, name string) ([]app, error) {
+	config, err := loadConfigFile()
+	if err != nil {
+		return nil, errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
+	apps, err := listApps(client, map[string]string{"name": "^" + name})
+	if err != nil {
+		return nil, err
+	}
+	if len(apps) == 0 {
+		return nil, errors.New("project not found")
+	}
+	var projectApps []app
+	for _, env := range config.Environments {
+		for _, app := range apps {
+			if len(app.CName) != 1 {
+				continue
+			}
+			projectName, err := extractProjectName(app, env)
+			if err != nil {
+				continue
+			}
+			if projectName == name {
+				app, err = getApp(client, app.Name)
+				if err != nil {
+					return nil, err
+				}
+				app.Addr = app.CName[0]
+				app.Env = env
+				projectApps = append(projectApps, app)
+			}
+		}
+	}
+	return projectApps, nil
+}
+
+func getEnvironmentsByName(envs []Environment, names []string) []Environment {
+	var filtered []Environment
+	for _, e := range envs {
+		for _, name := range names {
+			if e.Name == name {
+				filtered = append(filtered, e)
+				break
+			}
+		}
+	}
+	return filtered
 }
 
 func extractProjectName(a app, env Environment) (string, error) {

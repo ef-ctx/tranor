@@ -550,6 +550,758 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 	}
 }
 
+func TestProjectUpdate(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	server.prepareResponse(preparedResponse{
+		method: "DELETE",
+		path:   "/apps/proj3-dev",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method: "PUT",
+		path:   "/apps/proj3-prod",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method:  "POST",
+		path:    "/apps",
+		code:    http.StatusCreated,
+		payload: []byte(`{}`),
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-qa/cname",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-stage/cname",
+		code:   http.StatusOK,
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"-d", "updated project description",
+		"-t", "superteam",
+		"-p", "huge",
+		"--add-envs", "qa,stage",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(server.reqs) != 9 {
+		t.Fatalf("wrong number of requests sent to fake server. Want 9. Got %d", len(server.reqs))
+	}
+	createPayloads := []url.Values{
+		{
+			"name":        []string{"proj3-qa"},
+			"description": []string{"updated project description"},
+			"platform":    []string{"python"},
+			"plan":        []string{"huge"},
+			"teamOwner":   []string{"superteam"},
+			"pool":        []string{`qa\qa.example.com`},
+		},
+		{
+			"name":        []string{"proj3-stage"},
+			"description": []string{"updated project description"},
+			"platform":    []string{"python"},
+			"plan":        []string{"huge"},
+			"teamOwner":   []string{"superteam"},
+			"pool":        []string{`stage\stage.example.com`},
+		},
+		{"cname": []string{"proj3.qa.example.com"}},
+		{"cname": []string{"proj3.stage.example.com"}},
+	}
+	for i, expectedPayload := range createPayloads {
+		req := server.reqs[i+3]
+		if req.Method != "POST" {
+			t.Errorf("wrong request method. Want POST. Got %s", req.Method)
+		}
+		payload, err := url.ParseQuery(string(server.payloads[i+3]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(payload, expectedPayload) {
+			t.Errorf("wrong payload\nwant %#v\ngot  %3v", expectedPayload, payload)
+		}
+	}
+	deleteReq := server.reqs[7]
+	if deleteReq.Method != "DELETE" {
+		t.Errorf("wrong method. Want DELETE. Got %s", deleteReq.Method)
+	}
+	expectedPath := "/1.0/apps/proj3-dev"
+	if deleteReq.URL.Path != expectedPath {
+		t.Errorf("wrong path\nwant %q\ngot  %q", expectedPath, deleteReq.URL.Path)
+	}
+	updateReq := server.reqs[8]
+	if updateReq.Method != "PUT" {
+		t.Errorf("wrong method. Want PUT. Got %s", deleteReq.Method)
+	}
+	expectedPath = "/1.0/apps/proj3-prod"
+	if updateReq.URL.Path != expectedPath {
+		t.Errorf("wrong path\nwant %q\ngot  %q", expectedPath, deleteReq.URL.Path)
+	}
+	expectedPayload := url.Values{
+		"name":        []string{""},
+		"platform":    []string{""},
+		"description": []string{"updated project description"},
+		"plan":        []string{"huge"},
+		"teamOwner":   []string{"superteam"},
+		"pool":        []string{`prod\prod.example.com`},
+	}
+	payload, err := url.ParseQuery(string(server.payloads[8]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(payload, expectedPayload) {
+		t.Errorf("wrong update payload\nwant %#v\ngot  %#v", expectedPayload, payload)
+	}
+}
+
+func TestProjectUpdateNoNewEnvs(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	server.prepareResponse(preparedResponse{
+		method: "DELETE",
+		path:   "/apps/proj3-dev",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method: "PUT",
+		path:   "/apps/proj3-prod",
+		code:   http.StatusOK,
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"-d", "updated project description",
+		"-t", "superteam",
+		"-p", "small",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(server.reqs) != 5 {
+		t.Fatalf("wrong number of requests sent to fake server. Want 9. Got %d", len(server.reqs))
+	}
+	deleteReq := server.reqs[3]
+	if deleteReq.Method != "DELETE" {
+		t.Errorf("wrong method. Want DELETE. Got %s", deleteReq.Method)
+	}
+	expectedPath := "/1.0/apps/proj3-dev"
+	if deleteReq.URL.Path != expectedPath {
+		t.Errorf("wrong path\nwant %q\ngot  %q", expectedPath, deleteReq.URL.Path)
+	}
+	updateReq := server.reqs[4]
+	if updateReq.Method != "PUT" {
+		t.Errorf("wrong method. Want PUT. Got %s", deleteReq.Method)
+	}
+	expectedPath = "/1.0/apps/proj3-prod"
+	if updateReq.URL.Path != expectedPath {
+		t.Errorf("wrong path\nwant %q\ngot  %q", expectedPath, deleteReq.URL.Path)
+	}
+	expectedPayload := url.Values{
+		"name":        []string{""},
+		"platform":    []string{""},
+		"description": []string{"updated project description"},
+		"plan":        []string{"small"},
+		"teamOwner":   []string{"superteam"},
+		"pool":        []string{`prod\prod.example.com`},
+	}
+	payload, err := url.ParseQuery(string(server.payloads[4]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(payload, expectedPayload) {
+		t.Errorf("wrong update payload\nwant %#v\ngot  %#v", expectedPayload, payload)
+	}
+}
+
+func TestProjectUpdateOnlyEnvs(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	server.prepareResponse(preparedResponse{
+		method: "DELETE",
+		path:   "/apps/proj3-dev",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method:  "POST",
+		path:    "/apps",
+		code:    http.StatusCreated,
+		payload: []byte(`{}`),
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-qa/cname",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-stage/cname",
+		code:   http.StatusOK,
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"--add-envs", "qa,stage",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(server.reqs) != 8 {
+		t.Fatalf("wrong number of requests sent to fake server. Want 8. Got %d", len(server.reqs))
+	}
+	createPayloads := []url.Values{
+		{
+			"name":        []string{"proj3-qa"},
+			"description": []string{"my nice project"},
+			"platform":    []string{"python"},
+			"plan":        []string{"medium"},
+			"teamOwner":   []string{"admin"},
+			"pool":        []string{`qa\qa.example.com`},
+		},
+		{
+			"name":        []string{"proj3-stage"},
+			"description": []string{"my nice project"},
+			"platform":    []string{"python"},
+			"plan":        []string{"medium"},
+			"teamOwner":   []string{"admin"},
+			"pool":        []string{`stage\stage.example.com`},
+		},
+		{"cname": []string{"proj3.qa.example.com"}},
+		{"cname": []string{"proj3.stage.example.com"}},
+	}
+	for i, expectedPayload := range createPayloads {
+		req := server.reqs[i+3]
+		if req.Method != "POST" {
+			t.Errorf("wrong request method. Want POST. Got %s", req.Method)
+		}
+		payload, err := url.ParseQuery(string(server.payloads[i+3]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(payload, expectedPayload) {
+			t.Errorf("wrong payload\nwant %#v\ngot  %3v", expectedPayload, payload)
+		}
+	}
+	deleteReq := server.reqs[7]
+	if deleteReq.Method != "DELETE" {
+		t.Errorf("wrong method. Want DELETE. Got %s", deleteReq.Method)
+	}
+	expectedPath := "/1.0/apps/proj3-dev"
+	if deleteReq.URL.Path != expectedPath {
+		t.Errorf("wrong path\nwant %q\ngot  %q", expectedPath, deleteReq.URL.Path)
+	}
+}
+
+func TestProjectUpdateMissingName(t *testing.T) {
+	var c projectUpdate
+	err := c.Flags().Parse(true, []string{
+		"--add-envs", "qa,stage",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("got unexpected <nil> error")
+	}
+	expectedMsg := "please provide the name of the project"
+	if err.Error() != expectedMsg {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
+func TestProjectUpdateNotFound(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method: "GET",
+		path:   "/apps?name=" + url.QueryEscape("^proj3"),
+		code:   http.StatusNoContent,
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"-d", "updated project description",
+		"-t", "superteam",
+		"-p", "huge",
+		"--add-envs", "qa,stage",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	expectedMsg := "project not found"
+	if err.Error() != expectedMsg {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
+func TestProjectUpdateFailToCreateNewApps(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	server.prepareResponse(preparedResponse{
+		method:  "POST",
+		path:    "/apps",
+		code:    http.StatusInternalServerError,
+		payload: []byte(`{}`),
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"-d", "updated project description",
+		"-t", "superteam",
+		"-p", "huge",
+		"--add-envs", "qa,stage",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestProjectUpdateFailToSetCNames(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	server.prepareResponse(preparedResponse{
+		method:  "POST",
+		path:    "/apps",
+		code:    http.StatusCreated,
+		payload: []byte(`{}`),
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-qa/cname",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-stage/cname",
+		code:   http.StatusInternalServerError,
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"-d", "updated project description",
+		"-t", "superteam",
+		"-p", "huge",
+		"--add-envs", "qa,stage",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestProjectUpdateFailToUpdate(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	server.prepareResponse(preparedResponse{
+		method: "DELETE",
+		path:   "/apps/proj3-dev",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method: "PUT",
+		path:   "/apps/proj3-prod",
+		code:   http.StatusInternalServerError,
+	})
+	server.prepareResponse(preparedResponse{
+		method:  "POST",
+		path:    "/apps",
+		code:    http.StatusCreated,
+		payload: []byte(`{}`),
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-qa/cname",
+		code:   http.StatusOK,
+	})
+	server.prepareResponse(preparedResponse{
+		method: "POST",
+		path:   "/apps/proj3-stage/cname",
+		code:   http.StatusOK,
+	})
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"-d", "updated project description",
+		"-t", "superteam",
+		"-p", "huge",
+		"--add-envs", "qa,stage",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestProjectUpdateInvalidNewEnv(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"--add-envs", "qa2,stg",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> errror")
+	}
+}
+
+func TestProjectUpdateDuplicateEnv(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"--add-envs", "qa,prod",
+		"--remove-envs", "dev",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> errror")
+	}
+	expectedMsg := `env "prod" is already defined in this project`
+	if err.Error() != expectedMsg {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
+func TestProjectUpdateInvalidRemoveEnvs(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	server.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj3"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	appRespMap := map[string][]byte{
+		"proj3-dev":  []byte(appInfo5),
+		"proj3-prod": []byte(appInfo6),
+	}
+	for appName, payload := range appRespMap {
+		server.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/" + appName,
+			code:    http.StatusOK,
+			payload: payload,
+		})
+	}
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj3",
+		"--add-envs", "qa",
+		"--remove-envs", "stage",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> errror")
+	}
+	expectedMsg := `env "stage" is not defined in this project`
+	if err.Error() != expectedMsg {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
+func TestProjectUpdateFailToLoadConfig(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	var c projectUpdate
+	err = c.Flags().Parse(true, []string{
+		"-n", "superproj",
+		"-t", "myteam",
+		"-p", "medium",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	err = c.Run(&ctx, nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
 func TestRemoveProject(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()

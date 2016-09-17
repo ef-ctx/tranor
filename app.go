@@ -62,6 +62,8 @@ func updateApp(client *cmd.Client, opts createAppOptions) error {
 	if err != nil {
 		return err
 	}
+	opts.name = ""
+	opts.platform = ""
 	req, err := http.NewRequest("PUT", url, strings.NewReader(opts.encode()))
 	if err != nil {
 		return err
@@ -173,10 +175,14 @@ type app struct {
 	Platform      string        `json:"platform"`
 	Teams         []string      `json:"teams"`
 	Owner         string        `json:"owner"`
+	Pool          string        `json:"pool"`
 	TeamOwner     string        `json:"teamowner"`
 	Units         []interface{} `json:"units"`
 	Env           Environment
 	Addr          string
+	Plan          struct {
+		Name string `json:"name"`
+	} `json:"plan"`
 }
 
 type deploy struct {

@@ -120,7 +120,7 @@ func TestUpdateApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedParams := url.Values(map[string][]string{
-		"name":        {"myapp"},
+		"name":        {""},
 		"description": {"my nice app - updated!"},
 		"plan":        {"medium"},
 		"platform":    {""},
@@ -414,9 +414,9 @@ func TestGetApp(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		method:  "GET",
-		path:    "/apps/proj1-prod",
+		path:    "/apps/proj3-prod",
 		code:    http.StatusOK,
-		payload: []byte(appInfo4),
+		payload: []byte(appInfo6),
 	})
 	cleanup, err := setupFakeTarget(fakeServer.url())
 	if err != nil {
@@ -426,12 +426,12 @@ func TestGetApp(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	a, err := getApp(client, "proj1-prod")
+	a, err := getApp(client, "proj3-prod")
 	if err != nil {
 		t.Fatal(err)
 	}
 	var expectedApp app
-	err = json.Unmarshal([]byte(appInfo4), &expectedApp)
+	err = json.Unmarshal([]byte(appInfo6), &expectedApp)
 	if err != nil {
 		t.Fatal(err)
 	}

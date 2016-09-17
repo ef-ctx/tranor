@@ -386,3 +386,107 @@ const appInfo4 = `{
   ]
 }
 `
+
+const appInfo5 = `{
+  "cname": ["proj3.dev.example.com"],
+  "deploys": 35,
+  "description": "my nice project",
+  "ip": "proj3-dev.tsuru.example.com",
+  "lock": {
+    "Locked": false,
+    "Reason": "",
+    "Owner": "",
+    "AcquireDate": "0001-01-01T00:00:00Z"
+  },
+  "name": "proj3-dev",
+  "owner": "webmaster@example.com",
+  "plan": {
+    "name": "medium",
+    "memory": 536870912,
+    "swap": 1073741824,
+    "cpushare": 1024,
+    "default": true,
+    "router": "hipache"
+  },
+  "platform": "python",
+  "pool": "dev\\dev.example.com",
+  "repository": "git@example.com:proj3-dev.git",
+  "teamowner": "admin",
+  "teams": [
+    "admin",
+    "sysop"
+  ],
+  "units": [
+    {
+      "ID": "d7048b11e43dc1699b745dbe5a3a752c776dab37eb648c3c77a7aa2eb17d382f",
+      "Name": "",
+      "AppName": "proj3-dev",
+      "ProcessName": "web"
+    }
+  ]
+}
+`
+
+const appInfo6 = `{
+  "cname": ["proj3.example.com"],
+  "deploys": 35,
+  "description": "my nice project",
+  "ip": "proj3-prod.tsuru.example.com",
+  "lock": {
+    "Locked": false,
+    "Reason": "",
+    "Owner": "",
+    "AcquireDate": "0001-01-01T00:00:00Z"
+  },
+  "name": "proj3-prod",
+  "owner": "webmaster@example.com",
+  "plan": {
+    "name": "medium",
+    "memory": 536870912,
+    "swap": 1073741824,
+    "cpushare": 1024,
+    "default": true,
+    "router": "hipache"
+  },
+  "platform": "python",
+  "pool": "prod\\prod.example.com",
+  "repository": "git@example.com:proj3-prod.git",
+  "teamowner": "admin",
+  "teams": [
+    "admin",
+    "sysop"
+  ],
+  "units": [
+    {
+      "ID": "71281212acdf482318094afafafafafafabdbedf883197",
+      "Name": "",
+      "AppName": "proj3-prod",
+      "ProcessName": "web"
+    },
+    {
+      "ID": "71281184acdf482318193afafafafafafabdbedf183053",
+      "Name": "",
+      "AppName": "proj3-prod",
+      "ProcessName": "web"
+    },
+    {
+      "ID": "71282437acdf482318155afafafafafafabdbedf182839",
+      "Name": "",
+      "AppName": "proj3-prod",
+      "ProcessName": "web"
+    },
+    {
+      "ID": "71281271acdf482318180afafa0afafafabdbedf182883",
+      "Name": "",
+      "AppName": "proj3-prod",
+      "ProcessName": "web"
+    },
+    {
+      "ID": "71281341acdf482318123afafafafafafabdbedf182932",
+      "Name": "",
+      "AppName": "proj3-prod",
+      "ProcessName": "web"
+    }
+  ]
+}
+`

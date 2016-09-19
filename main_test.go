@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/tsuru/tsuru-client/tsuru/admin"
+	"github.com/tsuru/tsuru-client/tsuru/client"
 	"github.com/tsuru/tsuru/cmd"
 )
 
@@ -53,6 +55,127 @@ func TestEnvListIsRegistered(t *testing.T) {
 	}
 	if _, ok := gotCommand.(envList); !ok {
 		t.Errorf("command %#v is not of type envList{}", gotCommand)
+	}
+}
+
+func TestPlatformListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["platform-list"]
+	if !ok {
+		t.Error("command platform-list not found")
+	}
+	if _, ok := gotCommand.(admin.PlatformList); !ok {
+		t.Errorf("command %#v is not of type PlatformList{}", gotCommand)
+	}
+}
+
+func TestTeamListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["team-list"]
+	if !ok {
+		t.Error("command team-list not found")
+	}
+	if _, ok := gotCommand.(*client.TeamList); !ok {
+		t.Errorf("command %#v is not of type TeamList{}", gotCommand)
+	}
+}
+
+func TestTeamCreateIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["team-create"]
+	if !ok {
+		t.Error("command team-create not found")
+	}
+	if _, ok := gotCommand.(*client.TeamCreate); !ok {
+		t.Errorf("command %#v is not of type TeamCreate{}", gotCommand)
+	}
+}
+
+func TestTeamRemoveIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["team-remove"]
+	if !ok {
+		t.Error("command team-remove not found")
+	}
+	if _, ok := gotCommand.(*client.TeamRemove); !ok {
+		t.Errorf("command %#v is not of type TeamRemove{}", gotCommand)
+	}
+}
+
+func TestPlanListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["plan-list"]
+	if !ok {
+		t.Error("command plan-list not found")
+	}
+	if _, ok := gotCommand.(*client.PlanList); !ok {
+		t.Errorf("command %#v is not of type PlanList{}", gotCommand)
+	}
+}
+
+func TestProjectCreateIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-create"]
+	if !ok {
+		t.Error("command project-create not found")
+	}
+	if _, ok := gotCommand.(*projectCreate); !ok {
+		t.Errorf("command %#v is not of type projectCreate{}", gotCommand)
+	}
+}
+
+func TestProjectUpdateIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-update"]
+	if !ok {
+		t.Error("command project-update not found")
+	}
+	if _, ok := gotCommand.(*projectUpdate); !ok {
+		t.Errorf("command %#v is not of type projectUpdate{}", gotCommand)
+	}
+}
+
+func TestProjectRemoveIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-remove"]
+	if !ok {
+		t.Error("command project-remove not found")
+	}
+	if _, ok := gotCommand.(*projectRemove); !ok {
+		t.Errorf("command %#v is not of type projectRemove{}", gotCommand)
+	}
+}
+
+func TestProjectInfoIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-info"]
+	if !ok {
+		t.Error("command project-info not found")
+	}
+	if _, ok := gotCommand.(*projectInfo); !ok {
+		t.Errorf("command %#v is not of type projectInfo{}", gotCommand)
+	}
+}
+
+func TestProjectEnvInfoIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-env-info"]
+	if !ok {
+		t.Error("command project-env-info not found")
+	}
+	if _, ok := gotCommand.(*projectEnvInfo); !ok {
+		t.Errorf("command %#v is not of type projectEnvInfo{}", gotCommand)
+	}
+}
+
+func TestProjectListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-list"]
+	if !ok {
+		t.Error("command project-list not found")
+	}
+	if _, ok := gotCommand.(*projectList); !ok {
+		t.Errorf("command %#v is not of type projectList{}", gotCommand)
 	}
 }
 

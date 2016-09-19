@@ -34,7 +34,7 @@ the list of environment names and DNS suffixes, in the following format:
 			"dnsSuffix": "stage.example.com"
 		},
 		{
-			"name": "production",
+			"name": "prod",
 			"dnsSuffix": "example.com"
 		}
 	]

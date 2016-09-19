@@ -49,7 +49,7 @@ func TestEnvListRun(t *testing.T) {
 | dev         | dev.example.com   |
 | qa          | qa.example.com    |
 | stage       | stage.example.com |
-| production  | example.com       |
+| prod        | example.com       |
 +-------------+-------------------+
 `
 	if stdout.String() != expectedOutput {
@@ -96,7 +96,7 @@ func TestLoadConfigFile(t *testing.T) {
 			{Name: "dev", DNSSuffix: "dev.example.com"},
 			{Name: "qa", DNSSuffix: "qa.example.com"},
 			{Name: "stage", DNSSuffix: "stage.example.com"},
-			{Name: "production", DNSSuffix: "example.com"},
+			{Name: "prod", DNSSuffix: "example.com"},
 		},
 	}
 	if !reflect.DeepEqual(*config, expectedConfig) {
@@ -216,5 +216,42 @@ func TestWriteConfigFileErrorToCreateDirectory(t *testing.T) {
 	err = writeConfigFile(&Config{})
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestConfigEnvNames(t *testing.T) {
+	c := Config{
+		Environments: []Environment{
+			{Name: "dev", DNSSuffix: "dev.example.com"},
+			{Name: "qa", DNSSuffix: "qa.example.com"},
+			{Name: "prod", DNSSuffix: "example.com"},
+		},
+	}
+	expectedNames := []string{"dev", "qa", "prod"}
+	gotNames := c.envNames()
+	if !reflect.DeepEqual(gotNames, expectedNames) {
+		t.Errorf("wrong env names returned\nwant %#v\ngot  %#v", expectedNames, gotNames)
+	}
+}
+
+func TestEnvironmentPoolName(t *testing.T) {
+	var tests = []struct {
+		input  Environment
+		output string
+	}{
+		{
+			Environment{Name: "dev", DNSSuffix: "dev.example.com"},
+			`dev\dev.example.com`,
+		},
+		{
+			Environment{Name: "qa", DNSSuffix: "whatever"},
+			`qa\whatever`,
+		},
+	}
+	for _, test := range tests {
+		got := test.input.poolName()
+		if got != test.output {
+			t.Errorf("wrong pool name\nWant %q\nGot  %q", test.output, got)
+		}
 	}
 }

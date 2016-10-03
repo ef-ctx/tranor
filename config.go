@@ -53,21 +53,23 @@ func (c *projectConfigSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 		parts := strings.SplitN(decl[1], "=", 2)
 		envVars.Envs = append(envVars.Envs, struct{ Name, Value string }{Name: parts[0], Value: parts[1]})
 	}
+	var cmdErr error
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "setting config vars in environment %q... ", envName)
 		err := setConfig(client, appName, &envVars)
+		status := "ok"
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
-				fmt.Fprintln(ctx.Stdout, "not found")
-				continue
+				status = "not found"
+			} else {
+				status = "failed"
+				cmdErr = err
 			}
-			fmt.Fprintln(ctx.Stdout, "failed")
-			return err
 		}
-		fmt.Fprintln(ctx.Stdout, "ok")
+		fmt.Fprintln(ctx.Stdout, status)
 	}
-	return nil
+	return cmdErr
 }
 
 func (c *projectConfigSet) Flags() *gnuflag.FlagSet {
@@ -150,21 +152,23 @@ func (c *projectConfigUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.projectName == "" {
 		return errors.New("please provide the name of the project")
 	}
+	var cmdErr error
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "unsetting config vars from environment %q... ", envName)
 		err := unsetConfig(client, appName, c.noRestart, ctx.Args)
+		status := "ok"
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
-				fmt.Fprintln(ctx.Stdout, "not found")
-				continue
+				status = "not found"
+			} else {
+				status = "failed"
+				cmdErr = err
 			}
-			fmt.Fprintln(ctx.Stdout, "failed")
-			return err
 		}
-		fmt.Fprintln(ctx.Stdout, "ok")
+		fmt.Fprintln(ctx.Stdout, status)
 	}
-	return nil
+	return cmdErr
 }
 
 func (c *projectConfigUnset) Flags() *gnuflag.FlagSet {

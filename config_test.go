@@ -157,6 +157,7 @@ func TestProjectConfigSetErrorInOneOfTheApps(t *testing.T) {
 	}
 	expectedOutput := `setting config vars in environment "dev"... ok
 setting config vars in environment "stage"... failed
+setting config vars in environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
@@ -585,7 +586,7 @@ unsetting config vars from environment "prod"... ok
 	}
 }
 
-func TestProjectConfigError(t *testing.T) {
+func TestProjectConfigUnsetError(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
@@ -632,6 +633,7 @@ func TestProjectConfigError(t *testing.T) {
 	}
 	expectedOutput := `unsetting config vars from environment "dev"... ok
 unsetting config vars from environment "stage"... failed
+unsetting config vars from environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())

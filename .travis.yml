@@ -17,7 +17,7 @@ env:
     - GOARCH=386
 script:
   - go test -coverprofile=coverage.txt -covermode=atomic
-  - ./check-fmt.sh
+  - ./lint.sh
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 matrix:

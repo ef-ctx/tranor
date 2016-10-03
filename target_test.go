@@ -143,9 +143,7 @@ func TestDownloadConfiguration(t *testing.T) {
 }
 
 func TestDownloadConfigurationInvalidConfig(t *testing.T) {
-	var req http.Request
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		req = *r
 		w.Write([]byte("invalid json"))
 	}))
 	defer server.Close()

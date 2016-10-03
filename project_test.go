@@ -649,9 +649,9 @@ func TestProjectUpdate(t *testing.T) {
 		if req.Method != "POST" {
 			t.Errorf("wrong request method. Want POST. Got %s", req.Method)
 		}
-		payload, err := url.ParseQuery(string(server.payloads[i+3]))
-		if err != nil {
-			t.Fatal(err)
+		payload, parseErr := url.ParseQuery(string(server.payloads[i+3]))
+		if parseErr != nil {
+			t.Fatal(parseErr)
 		}
 		if !reflect.DeepEqual(payload, expectedPayload) {
 			t.Errorf("wrong payload\nwant %#v\ngot  %3v", expectedPayload, payload)

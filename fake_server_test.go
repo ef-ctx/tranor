@@ -48,9 +48,14 @@ func (s *fakeServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.payloads = append(s.payloads, payload)
 	var resp *preparedResponse
 	requestURI := versionPathRegexp.ReplaceAllString(r.URL.RequestURI(), "")
+	path := versionPathRegexp.ReplaceAllString(r.URL.Path, "")
 	s.t.Logf("cleaned request: %s %s", r.Method, requestURI)
 	for _, rs := range s.resps {
-		if rs.method == r.Method && rs.path == requestURI {
+		pathToCompare := requestURI
+		if rs.ignoreQS {
+			pathToCompare = path
+		}
+		if rs.method == r.Method && rs.path == pathToCompare {
 			resp = &rs
 			break
 		}
@@ -65,8 +70,9 @@ func (s *fakeServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type preparedResponse struct {
-	method  string
-	path    string
-	code    int
-	payload []byte
+	method   string
+	path     string
+	code     int
+	payload  []byte
+	ignoreQS bool
 }

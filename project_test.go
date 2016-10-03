@@ -1573,13 +1573,13 @@ Team owner: admin` + "\n\n"
 	}
 }
 
-func ProjectInfoNotFound(t *testing.T) {
+func TestProjectInfoNotFound(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
 		method: "GET",
 		path:   "/apps?name=" + url.QueryEscape("^proj1"),
-		code:   http.StatusOK,
+		code:   http.StatusNoContent,
 	})
 	cleanup, err := setupFakeTarget(server.url())
 	if err != nil {

@@ -479,7 +479,7 @@ func TestGetAppNoTarget(t *testing.T) {
 	}
 }
 
-func TestSetEnvs(t *testing.T) {
+func TestSetConfig(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
@@ -496,7 +496,7 @@ func TestSetEnvs(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	err = setEnvs(client, "proj1-prod", &api.Envs{
+	err = setConfig(client, "proj1-prod", &api.Envs{
 		Private:   true,
 		NoRestart: true,
 		Envs: []struct {
@@ -527,7 +527,7 @@ func TestSetEnvs(t *testing.T) {
 	}
 }
 
-func TestSetEnvsNotFound(t *testing.T) {
+func TestSetConfigNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	cleanup, err := setupFakeTarget(fakeServer.url())
@@ -538,7 +538,7 @@ func TestSetEnvsNotFound(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	err = setEnvs(client, "proj1-prod", nil)
+	err = setConfig(client, "proj1-prod", nil)
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
@@ -548,20 +548,20 @@ func TestSetEnvsNotFound(t *testing.T) {
 	}
 }
 
-func TestSetEnvsNoTarget(t *testing.T) {
+func TestSetConfigNoTarget(t *testing.T) {
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
 	os.Setenv("HOME", dir)
-	err = setEnvs(nil, "proj1-prod", nil)
+	err = setConfig(nil, "proj1-prod", nil)
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
 }
 
-func TestGetEnvs(t *testing.T) {
+func TestGetConfig(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
@@ -578,7 +578,7 @@ func TestGetEnvs(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	evars, err := getEnvs(client, "proj1-prod")
+	evars, err := getConfig(client, "proj1-prod")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -598,7 +598,7 @@ func TestGetEnvs(t *testing.T) {
 	}
 }
 
-func TestGetEnvsNotFound(t *testing.T) {
+func TestGetConfigNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	cleanup, err := setupFakeTarget(fakeServer.url())
@@ -609,7 +609,7 @@ func TestGetEnvsNotFound(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	evars, err := getEnvs(client, "proj1-prod")
+	evars, err := getConfig(client, "proj1-prod")
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
@@ -622,14 +622,14 @@ func TestGetEnvsNotFound(t *testing.T) {
 	}
 }
 
-func TestGetEnvsNoTarget(t *testing.T) {
+func TestGetConfigNoTarget(t *testing.T) {
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
 	os.Setenv("HOME", dir)
-	evars, err := getEnvs(nil, "proj1-prod")
+	evars, err := getConfig(nil, "proj1-prod")
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
@@ -638,7 +638,7 @@ func TestGetEnvsNoTarget(t *testing.T) {
 	}
 }
 
-func TestUnsetEnvs(t *testing.T) {
+func TestUnsetConfig(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
@@ -656,7 +656,7 @@ func TestUnsetEnvs(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	err = unsetEnvs(client, "proj1-prod", true, []string{"USER_NAME", "USER_PASSWORD", "PASSWORD_HINT"})
+	err = unsetConfig(client, "proj1-prod", true, []string{"USER_NAME", "USER_PASSWORD", "PASSWORD_HINT"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -670,7 +670,7 @@ func TestUnsetEnvs(t *testing.T) {
 	}
 }
 
-func TestUnsetEnvsNotFound(t *testing.T) {
+func TestUnsetConfigNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	cleanup, err := setupFakeTarget(fakeServer.url())
@@ -681,7 +681,7 @@ func TestUnsetEnvsNotFound(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	err = unsetEnvs(client, "proj1-prod", false, nil)
+	err = unsetConfig(client, "proj1-prod", false, nil)
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
@@ -691,14 +691,14 @@ func TestUnsetEnvsNotFound(t *testing.T) {
 	}
 }
 
-func TestUnsetEnvsNoTarget(t *testing.T) {
+func TestUnsetConfigNoTarget(t *testing.T) {
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
 	os.Setenv("HOME", dir)
-	err = unsetEnvs(nil, "proj1-prod", false, nil)
+	err = unsetConfig(nil, "proj1-prod", false, nil)
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}

@@ -158,7 +158,7 @@ func getApp(client *cmd.Client, appName string) (app, error) {
 	return a, err
 }
 
-func setEnvs(client *cmd.Client, appName string, envVars *api.Envs) error {
+func setConfig(client *cmd.Client, appName string, envVars *api.Envs) error {
 	url, err := cmd.GetURL("/apps/" + appName + "/env")
 	if err != nil {
 		return err
@@ -179,7 +179,7 @@ func setEnvs(client *cmd.Client, appName string, envVars *api.Envs) error {
 	return cmd.StreamJSONResponse(ioutil.Discard, resp)
 }
 
-func getEnvs(client *cmd.Client, appName string) ([]envVar, error) {
+func getConfig(client *cmd.Client, appName string) ([]envVar, error) {
 	var vars []envVar
 	resp, err := doReq(client, "/apps/"+appName+"/env")
 	if err != nil {
@@ -190,7 +190,7 @@ func getEnvs(client *cmd.Client, appName string) ([]envVar, error) {
 	return vars, err
 }
 
-func unsetEnvs(client *cmd.Client, appName string, noRestart bool, envVars []string) error {
+func unsetConfig(client *cmd.Client, appName string, noRestart bool, envVars []string) error {
 	qs := make(url.Values)
 	qs.Set("noRestart", strconv.FormatBool(noRestart))
 	for _, e := range envVars {

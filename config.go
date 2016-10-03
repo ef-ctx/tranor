@@ -56,7 +56,7 @@ func (c *projectConfigSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "setting config vars in environment %q... ", envName)
-		err := setEnvs(client, appName, &envVars)
+		err := setConfig(client, appName, &envVars)
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
 				fmt.Fprintln(ctx.Stdout, "not found")
@@ -103,7 +103,7 @@ func (c *projectConfigGet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	}
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
-		envVars, err := getEnvs(client, appName)
+		envVars, err := getConfig(client, appName)
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
 				fmt.Fprintf(ctx.Stderr, "WARNING: project not found in environment %q\n", envName)
@@ -153,7 +153,7 @@ func (c *projectConfigUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "unsetting config vars from environment %q... ", envName)
-		err := unsetEnvs(client, appName, c.noRestart, ctx.Args)
+		err := unsetConfig(client, appName, c.noRestart, ctx.Args)
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
 				fmt.Fprintln(ctx.Stdout, "not found")

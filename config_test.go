@@ -47,7 +47,8 @@ func TestProjectConfigSet(t *testing.T) {
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
-		"-p", "--no-restart",
+		"--no-restart",
+		"-p",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -137,7 +138,8 @@ func TestProjectConfigSetErrorInOneOfTheApps(t *testing.T) {
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
-		"-p", "--no-restart",
+		"--no-restart",
+		"-p",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -182,7 +184,8 @@ func TestProjectConfigSetAppNotFound(t *testing.T) {
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
-		"-p", "--no-restart",
+		"--no-restart",
+		"-p",
 	})
 	if err != nil {
 		t.Fatal(err)

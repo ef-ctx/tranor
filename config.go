@@ -29,7 +29,7 @@ func (c *projectConfigSet) Info() *cmd.Info {
 	return &cmd.Info{
 		Name:    "config-set",
 		Desc:    "defines configuration (environment variables) for a given project",
-		Usage:   "config-set <NAME=value> [NAME=value]... [-n/--project-name projectname] [-p/--private] [--no-restart]",
+		Usage:   "config-set <NAME=value> [NAME=value]... <-n/--project-name projectname> [-p/--private] [--no-restart]",
 		MinArgs: 1,
 	}
 }

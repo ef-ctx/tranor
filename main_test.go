@@ -179,6 +179,39 @@ func TestProjectListIsRegistered(t *testing.T) {
 	}
 }
 
+func TestProjectConfigGetIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["config-get"]
+	if !ok {
+		t.Error("command config-get not found")
+	}
+	if _, ok := gotCommand.(*projectConfigGet); !ok {
+		t.Errorf("command %#v is not of type projectConfigGet{}", gotCommand)
+	}
+}
+
+func TestProjectConfigSetIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["config-set"]
+	if !ok {
+		t.Error("command config-set not found")
+	}
+	if _, ok := gotCommand.(*projectConfigSet); !ok {
+		t.Errorf("command %#v is not of type projectConfigSet{}", gotCommand)
+	}
+}
+
+func TestProjectConfigUnsetIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["config-unset"]
+	if !ok {
+		t.Error("command config-unset not found")
+	}
+	if _, ok := gotCommand.(*projectConfigUnset); !ok {
+		t.Errorf("command %#v is not of type projectConfigUnset{}", gotCommand)
+	}
+}
+
 func TestBuiltinTargetSetIsOverwritten(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["target-set"]

@@ -4,13 +4,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-pkgs=$(go list ./... | grep -v vendor | sed 's;github.com/ef-ctx/tranor;.;')
-
-test -z "$(gofmt -s -l $pkgs | grep -v vendor/ | tee /dev/stderr)"
-
-go vet $pkgs
-go get github.com/golang/lint/golint
-golint $pkgs
-
-go get github.com/remyoudompheng/go-misc/deadcode
-deadcode $pkgs
+go get github.com/alecthomas/gometalinter honnef.co/go/unused/cmd/unused
+gometalinter --install --vendored-linters
+go install ./...
+gometalinter -j 4 --enable=gofmt --enable=unused --disable=dupl --disable=errcheck --disable=gas --disable=interfacer --disable=gocyclo --deadline=10m --tests --vendor ./...

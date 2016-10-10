@@ -143,7 +143,7 @@ type projectConfigUnset struct {
 func (c *projectConfigUnset) Info() *cmd.Info {
 	return &cmd.Info{
 		Name:    "config-unset",
-		Desc:    "undefine configuration params (environment variables) of the project in the given environments",
+		Desc:    "unset configuration params (environment variables) of the project in the given environments",
 		MinArgs: 1,
 	}
 }

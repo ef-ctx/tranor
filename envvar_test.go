@@ -64,9 +64,9 @@ func TestProjectEnvVarSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `setting config vars in environment "dev"... ok
-setting config vars in environment "stage"... ok
-setting config vars in environment "prod"... ok
+	expectedOutput := `setting variables in environment "dev"... ok
+setting variables in environment "stage"... ok
+setting variables in environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
@@ -155,9 +155,9 @@ func TestProjectEnvVarSetErrorInOneOfTheApps(t *testing.T) {
 	if err == nil {
 		t.Fatal("got unexpected <nil> error")
 	}
-	expectedOutput := `setting config vars in environment "dev"... ok
-setting config vars in environment "stage"... failed
-setting config vars in environment "prod"... ok
+	expectedOutput := `setting variables in environment "dev"... ok
+setting variables in environment "stage"... failed
+setting variables in environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
@@ -202,9 +202,9 @@ func TestProjectEnvVarSetAppNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `setting config vars in environment "dev"... ok
-setting config vars in environment "stage"... not found
-setting config vars in environment "prod"... ok
+	expectedOutput := `setting variables in environment "dev"... ok
+setting variables in environment "stage"... not found
+setting variables in environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
@@ -271,25 +271,25 @@ func TestProjectEnvVarGet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `config vars in "dev":
+	expectedOutput := `variables in "dev":
 
  APP_NAME=proj1-dev
  USER_NAME=root
- USER_PASSWORD=*** (private config)
+ USER_PASSWORD=*** (private variable)
 
 
-config vars in "stage":
+variables in "stage":
 
  APP_NAME=proj1-stage
  USER_NAME=root
- USER_PASSWORD=*** (private config)
+ USER_PASSWORD=*** (private variable)
 
 
-config vars in "prod":
+variables in "prod":
 
  APP_NAME=proj1-prod
  USER_NAME=root
- USER_PASSWORD=*** (private config)
+ USER_PASSWORD=*** (private variable)
 
 
 `
@@ -367,18 +367,18 @@ func TestProjectEnvVarGetAppNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `config vars in "dev":
+	expectedOutput := `variables in "dev":
 
  APP_NAME=proj1-dev
  USER_NAME=root
- USER_PASSWORD=*** (private config)
+ USER_PASSWORD=*** (private variable)
 
 
-config vars in "prod":
+variables in "prod":
 
  APP_NAME=proj1-prod
  USER_NAME=root
- USER_PASSWORD=*** (private config)
+ USER_PASSWORD=*** (private variable)
 
 
 `
@@ -447,11 +447,11 @@ func TestProjectEnvVarGetErrorInOneOfTheApps(t *testing.T) {
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
-	expectedOutput := `config vars in "dev":
+	expectedOutput := `variables in "dev":
 
  APP_NAME=proj1-dev
  USER_NAME=root
- USER_PASSWORD=*** (private config)
+ USER_PASSWORD=*** (private variable)
 
 
 `
@@ -511,9 +511,9 @@ func TestProjectEnvVarUnset(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `unsetting config vars from environment "dev"... ok
-unsetting config vars from environment "stage"... ok
-unsetting config vars from environment "prod"... ok
+	expectedOutput := `unsetting variables from environment "dev"... ok
+unsetting variables from environment "stage"... ok
+unsetting variables from environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
@@ -577,9 +577,9 @@ func TestProjectEnvVarUnsetAppNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `unsetting config vars from environment "dev"... ok
-unsetting config vars from environment "stage"... not found
-unsetting config vars from environment "prod"... ok
+	expectedOutput := `unsetting variables from environment "dev"... ok
+unsetting variables from environment "stage"... not found
+unsetting variables from environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
@@ -631,9 +631,9 @@ func TestProjectEnvVarUnsetError(t *testing.T) {
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
-	expectedOutput := `unsetting config vars from environment "dev"... ok
-unsetting config vars from environment "stage"... failed
-unsetting config vars from environment "prod"... ok
+	expectedOutput := `unsetting variables from environment "dev"... ok
+unsetting variables from environment "stage"... failed
+unsetting variables from environment "prod"... ok
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())

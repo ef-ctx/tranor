@@ -230,7 +230,7 @@ type envVar struct {
 }
 
 func (e *envVar) String() string {
-	value := "*** (private config)"
+	value := "*** (private variable)"
 	if e.Public {
 		value = e.Value
 	}

@@ -725,7 +725,7 @@ func TestEnvVarStringRepr(t *testing.T) {
 				Name:  "USER_PASSWORD",
 				Value: "r00t",
 			},
-			"USER_PASSWORD=*** (private config)",
+			"USER_PASSWORD=*** (private variable)",
 		},
 	}
 	for _, test := range tests {

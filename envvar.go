@@ -28,7 +28,7 @@ type projectEnvVarSet struct {
 func (c *projectEnvVarSet) Info() *cmd.Info {
 	return &cmd.Info{
 		Name:    "envvar-set",
-		Desc:    "defines configuration (environment variables) for a given project",
+		Desc:    "defines environment variables for a given project",
 		Usage:   "envvar-set <NAME=value> [NAME=value]... <-n/--project-name projectname> [-p/--private] [--no-restart]",
 		MinArgs: 1,
 	}
@@ -56,7 +56,7 @@ func (c *projectEnvVarSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	var cmdErr error
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
-		fmt.Fprintf(ctx.Stdout, "setting config vars in environment %q... ", envName)
+		fmt.Fprintf(ctx.Stdout, "setting variables in environment %q... ", envName)
 		err := setEnvVars(client, appName, &envVars)
 		status := "ok"
 		if err != nil {
@@ -77,11 +77,11 @@ func (c *projectEnvVarSet) Flags() *gnuflag.FlagSet {
 		c.fs = gnuflag.NewFlagSet("envvar-set", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.projectName, "project-name", "", "name of the project")
 		c.fs.StringVar(&c.projectName, "n", "", "name of the project")
-		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the configuration")
-		c.fs.Var(&c.envs, "e", "comma-separated list of environments to set the configuration")
-		c.fs.BoolVar(&c.private, "private", false, "set the configuration as private environment variables (not visible through command line)")
-		c.fs.BoolVar(&c.private, "p", false, "set the configuration as private environment variables (not visible through command line)")
-		c.fs.BoolVar(&c.noRestart, "no-restart", false, "set the configuration without restarting the application process")
+		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the variables")
+		c.fs.Var(&c.envs, "e", "comma-separated list of environments to set the variables")
+		c.fs.BoolVar(&c.private, "private", false, "set the variables to private (not visible through command line)")
+		c.fs.BoolVar(&c.private, "p", false, "set the variables to private (not visible through command line)")
+		c.fs.BoolVar(&c.noRestart, "no-restart", false, "set the environment variables without restarting the application process")
 	}
 	return c.fs
 }
@@ -95,7 +95,7 @@ type projectEnvVarGet struct {
 func (c *projectEnvVarGet) Info() *cmd.Info {
 	return &cmd.Info{
 		Name: "envvar-get",
-		Desc: "gets the configuration (environment variables) of the project in the given environments",
+		Desc: "gets environment variables of the project in the given environments",
 	}
 }
 
@@ -113,7 +113,7 @@ func (c *projectEnvVarGet) Run(ctx *cmd.Context, client *cmd.Client) error {
 			}
 			return err
 		}
-		fmt.Fprintf(ctx.Stdout, "config vars in %q:\n\n", envName)
+		fmt.Fprintf(ctx.Stdout, "variables in %q:\n\n", envName)
 		for _, evar := range envVars {
 			fmt.Fprintf(ctx.Stdout, " %s\n", &evar)
 		}
@@ -127,8 +127,8 @@ func (c *projectEnvVarGet) Flags() *gnuflag.FlagSet {
 		c.fs = gnuflag.NewFlagSet("envvar-get", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.projectName, "project-name", "", "name of the project")
 		c.fs.StringVar(&c.projectName, "n", "", "name of the project")
-		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the configuration")
-		c.fs.Var(&c.envs, "e", "comma-separated list of environments to set the configuration")
+		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to get the variables")
+		c.fs.Var(&c.envs, "e", "comma-separated list of environments to get the variables")
 	}
 	return c.fs
 }
@@ -143,7 +143,7 @@ type projectEnvVarUnset struct {
 func (c *projectEnvVarUnset) Info() *cmd.Info {
 	return &cmd.Info{
 		Name:    "envvar-unset",
-		Desc:    "unset configuration params (environment variables) of the project in the given environments",
+		Desc:    "unset environment variables of the project in the given environments",
 		MinArgs: 1,
 	}
 }
@@ -155,7 +155,7 @@ func (c *projectEnvVarUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
 	var cmdErr error
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
-		fmt.Fprintf(ctx.Stdout, "unsetting config vars from environment %q... ", envName)
+		fmt.Fprintf(ctx.Stdout, "unsetting variables from environment %q... ", envName)
 		err := unsetEnvVars(client, appName, c.noRestart, ctx.Args)
 		status := "ok"
 		if err != nil {
@@ -176,9 +176,9 @@ func (c *projectEnvVarUnset) Flags() *gnuflag.FlagSet {
 		c.fs = gnuflag.NewFlagSet("envvar-get", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.projectName, "project-name", "", "name of the project")
 		c.fs.StringVar(&c.projectName, "n", "", "name of the project")
-		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the configuration")
-		c.fs.Var(&c.envs, "e", "comma-separated list of environments to set the configuration")
-		c.fs.BoolVar(&c.noRestart, "no-restart", false, "unset configuration without restarting the application process")
+		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the variables")
+		c.fs.Var(&c.envs, "e", "comma-separated list of environments to set the variables")
+		c.fs.BoolVar(&c.noRestart, "no-restart", false, "unset environment variables without restarting the application process")
 	}
 	return c.fs
 }

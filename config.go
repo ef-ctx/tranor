@@ -17,7 +17,7 @@ import (
 	tsuruerrors "github.com/tsuru/tsuru/errors"
 )
 
-type projectConfigSet struct {
+type projectEnvVarSet struct {
 	projectName string
 	envs        commaSeparatedFlag
 	private     bool
@@ -25,16 +25,16 @@ type projectConfigSet struct {
 	fs          *gnuflag.FlagSet
 }
 
-func (c *projectConfigSet) Info() *cmd.Info {
+func (c *projectEnvVarSet) Info() *cmd.Info {
 	return &cmd.Info{
-		Name:    "config-set",
+		Name:    "envvar-set",
 		Desc:    "defines configuration (environment variables) for a given project",
-		Usage:   "config-set <NAME=value> [NAME=value]... <-n/--project-name projectname> [-p/--private] [--no-restart]",
+		Usage:   "envvar-set <NAME=value> [NAME=value]... <-n/--project-name projectname> [-p/--private] [--no-restart]",
 		MinArgs: 1,
 	}
 }
 
-func (c *projectConfigSet) Run(ctx *cmd.Context, client *cmd.Client) error {
+func (c *projectEnvVarSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	ctx.RawOutput()
 	if c.projectName == "" {
 		return errors.New("please provide the name of the project")
@@ -57,7 +57,7 @@ func (c *projectConfigSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "setting config vars in environment %q... ", envName)
-		err := setConfig(client, appName, &envVars)
+		err := setEnvVars(client, appName, &envVars)
 		status := "ok"
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
@@ -72,9 +72,9 @@ func (c *projectConfigSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	return cmdErr
 }
 
-func (c *projectConfigSet) Flags() *gnuflag.FlagSet {
+func (c *projectEnvVarSet) Flags() *gnuflag.FlagSet {
 	if c.fs == nil {
-		c.fs = gnuflag.NewFlagSet("config-set", gnuflag.ExitOnError)
+		c.fs = gnuflag.NewFlagSet("envvar-set", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.projectName, "project-name", "", "name of the project")
 		c.fs.StringVar(&c.projectName, "n", "", "name of the project")
 		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the configuration")
@@ -86,26 +86,26 @@ func (c *projectConfigSet) Flags() *gnuflag.FlagSet {
 	return c.fs
 }
 
-type projectConfigGet struct {
+type projectEnvVarGet struct {
 	projectName string
 	envs        commaSeparatedFlag
 	fs          *gnuflag.FlagSet
 }
 
-func (c *projectConfigGet) Info() *cmd.Info {
+func (c *projectEnvVarGet) Info() *cmd.Info {
 	return &cmd.Info{
-		Name: "config-get",
+		Name: "envvar-get",
 		Desc: "gets the configuration (environment variables) of the project in the given environments",
 	}
 }
 
-func (c *projectConfigGet) Run(ctx *cmd.Context, client *cmd.Client) error {
+func (c *projectEnvVarGet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.projectName == "" {
 		return errors.New("please provide the name of the project")
 	}
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
-		envVars, err := getConfig(client, appName)
+		envVars, err := getEnvVars(client, appName)
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
 				fmt.Fprintf(ctx.Stderr, "WARNING: project not found in environment %q\n", envName)
@@ -122,9 +122,9 @@ func (c *projectConfigGet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	return nil
 }
 
-func (c *projectConfigGet) Flags() *gnuflag.FlagSet {
+func (c *projectEnvVarGet) Flags() *gnuflag.FlagSet {
 	if c.fs == nil {
-		c.fs = gnuflag.NewFlagSet("config-get", gnuflag.ExitOnError)
+		c.fs = gnuflag.NewFlagSet("envvar-get", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.projectName, "project-name", "", "name of the project")
 		c.fs.StringVar(&c.projectName, "n", "", "name of the project")
 		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the configuration")
@@ -133,22 +133,22 @@ func (c *projectConfigGet) Flags() *gnuflag.FlagSet {
 	return c.fs
 }
 
-type projectConfigUnset struct {
+type projectEnvVarUnset struct {
 	projectName string
 	noRestart   bool
 	envs        commaSeparatedFlag
 	fs          *gnuflag.FlagSet
 }
 
-func (c *projectConfigUnset) Info() *cmd.Info {
+func (c *projectEnvVarUnset) Info() *cmd.Info {
 	return &cmd.Info{
-		Name:    "config-unset",
+		Name:    "envvar-unset",
 		Desc:    "unset configuration params (environment variables) of the project in the given environments",
 		MinArgs: 1,
 	}
 }
 
-func (c *projectConfigUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
+func (c *projectEnvVarUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.projectName == "" {
 		return errors.New("please provide the name of the project")
 	}
@@ -156,7 +156,7 @@ func (c *projectConfigUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
 	for _, envName := range c.envs.Values() {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "unsetting config vars from environment %q... ", envName)
-		err := unsetConfig(client, appName, c.noRestart, ctx.Args)
+		err := unsetEnvVars(client, appName, c.noRestart, ctx.Args)
 		status := "ok"
 		if err != nil {
 			if e, ok := err.(*tsuruerrors.HTTP); ok && e.Code == http.StatusNotFound {
@@ -171,9 +171,9 @@ func (c *projectConfigUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
 	return cmdErr
 }
 
-func (c *projectConfigUnset) Flags() *gnuflag.FlagSet {
+func (c *projectEnvVarUnset) Flags() *gnuflag.FlagSet {
 	if c.fs == nil {
-		c.fs = gnuflag.NewFlagSet("config-get", gnuflag.ExitOnError)
+		c.fs = gnuflag.NewFlagSet("envvar-get", gnuflag.ExitOnError)
 		c.fs.StringVar(&c.projectName, "project-name", "", "name of the project")
 		c.fs.StringVar(&c.projectName, "n", "", "name of the project")
 		c.fs.Var(&c.envs, "envs", "comma-separated list of environments to set the configuration")

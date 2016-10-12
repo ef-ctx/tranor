@@ -13,20 +13,20 @@ import (
 	"github.com/tsuru/tsuru/cmd"
 )
 
-func TestProjectConfigSetInfo(t *testing.T) {
-	info := (&projectConfigSet{}).Info()
+func TestProjectEnvVarSetInfo(t *testing.T) {
+	info := (&projectEnvVarSet{}).Info()
 	if info == nil {
 		t.Fatal("unexpected <nil> info")
 	}
-	if info.Name != "config-set" {
-		t.Errorf("wrong name. want %q. got %q", "config-set", info.Name)
+	if info.Name != "envvar-set" {
+		t.Errorf("wrong name. want %q. got %q", "envvar-set", info.Name)
 	}
 	if info.MinArgs != 1 {
 		t.Errorf("wrong min args. want 1. got %d", info.MinArgs)
 	}
 }
 
-func TestProjectConfigSet(t *testing.T) {
+func TestProjectEnvVarSet(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	appNames := []string{"proj1-dev", "proj1-stage", "proj1-prod"}
@@ -43,7 +43,7 @@ func TestProjectConfigSet(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigSet
+	var c projectEnvVarSet
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -73,8 +73,8 @@ setting config vars in environment "prod"... ok
 	}
 }
 
-func TestProjectConfigSetMissingName(t *testing.T) {
-	var c projectConfigSet
+func TestProjectEnvVarSetMissingName(t *testing.T) {
+	var c projectEnvVarSet
 	err := c.Flags().Parse(true, []string{"--no-restart"})
 	if err != nil {
 		t.Fatal(err)
@@ -92,8 +92,8 @@ func TestProjectConfigSetMissingName(t *testing.T) {
 	}
 }
 
-func TestProjectConfigSetInvalidFormat(t *testing.T) {
-	var c projectConfigSet
+func TestProjectEnvVarSetInvalidFormat(t *testing.T) {
+	var c projectEnvVarSet
 	err := c.Flags().Parse(true, []string{"-n", "proj1"})
 	if err != nil {
 		t.Fatal(err)
@@ -111,7 +111,7 @@ func TestProjectConfigSetInvalidFormat(t *testing.T) {
 	}
 }
 
-func TestProjectConfigSetErrorInOneOfTheApps(t *testing.T) {
+func TestProjectEnvVarSetErrorInOneOfTheApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
@@ -134,7 +134,7 @@ func TestProjectConfigSetErrorInOneOfTheApps(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigSet
+	var c projectEnvVarSet
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -164,7 +164,7 @@ setting config vars in environment "prod"... ok
 	}
 }
 
-func TestProjectConfigSetAppNotFound(t *testing.T) {
+func TestProjectEnvVarSetAppNotFound(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	appNames := []string{"proj1-dev", "proj1-prod"}
@@ -181,7 +181,7 @@ func TestProjectConfigSetAppNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigSet
+	var c projectEnvVarSet
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -211,17 +211,17 @@ setting config vars in environment "prod"... ok
 	}
 }
 
-func TestProjectConfigGetInfo(t *testing.T) {
-	info := (&projectConfigGet{}).Info()
+func TestProjectEnvVarGetInfo(t *testing.T) {
+	info := (&projectEnvVarGet{}).Info()
 	if info == nil {
 		t.Fatal("unexpected <nil> info")
 	}
-	if info.Name != "config-get" {
-		t.Errorf("wrong name. want %q. got %q", "config-get", info.Name)
+	if info.Name != "envvar-get" {
+		t.Errorf("wrong name. want %q. got %q", "envvar-get", info.Name)
 	}
 }
 
-func TestProjectConfigGet(t *testing.T) {
+func TestProjectEnvVarGet(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	appNames := []string{"proj1-dev", "proj1-stage", "proj1-prod"}
@@ -256,7 +256,7 @@ func TestProjectConfigGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigGet
+	var c projectEnvVarGet
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -298,8 +298,8 @@ config vars in "prod":
 	}
 }
 
-func TestProjectConfigGetMissingName(t *testing.T) {
-	var c projectConfigGet
+func TestProjectEnvVarGetMissingName(t *testing.T) {
+	var c projectEnvVarGet
 	err := c.Flags().Parse(true, []string{"-e", "dev,stage,prod"})
 	if err != nil {
 		t.Fatal(err)
@@ -317,7 +317,7 @@ func TestProjectConfigGetMissingName(t *testing.T) {
 	}
 }
 
-func TestProjectConfigGetAppNotFound(t *testing.T) {
+func TestProjectEnvVarGetAppNotFound(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	appNames := []string{"proj1-dev", "proj1-prod"}
@@ -352,7 +352,7 @@ func TestProjectConfigGetAppNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigGet
+	var c projectEnvVarGet
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -391,7 +391,7 @@ config vars in "prod":
 	}
 }
 
-func TestProjectConfigGetErrorInOneOfTheApps(t *testing.T) {
+func TestProjectEnvVarGetErrorInOneOfTheApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
@@ -432,7 +432,7 @@ func TestProjectConfigGetErrorInOneOfTheApps(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigGet
+	var c projectEnvVarGet
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -460,20 +460,20 @@ func TestProjectConfigGetErrorInOneOfTheApps(t *testing.T) {
 	}
 }
 
-func TestProjectConfigUnsetInfo(t *testing.T) {
-	info := (&projectConfigUnset{}).Info()
+func TestProjectEnvVarUnsetInfo(t *testing.T) {
+	info := (&projectEnvVarUnset{}).Info()
 	if info == nil {
 		t.Fatal("unexpected <nil> info")
 	}
-	if info.Name != "config-unset" {
-		t.Errorf("wrong name. want %q. got %q", "config-unset", info.Name)
+	if info.Name != "envvar-unset" {
+		t.Errorf("wrong name. want %q. got %q", "envvar-unset", info.Name)
 	}
 	if info.MinArgs != 1 {
 		t.Errorf("wrong min args. want 1. got %d", info.MinArgs)
 	}
 }
 
-func TestProjectConfigUnset(t *testing.T) {
+func TestProjectEnvVarUnset(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	appNames := []string{"proj1-dev", "proj1-stage", "proj1-prod"}
@@ -491,7 +491,7 @@ func TestProjectConfigUnset(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigUnset
+	var c projectEnvVarUnset
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -520,8 +520,8 @@ unsetting config vars from environment "prod"... ok
 	}
 }
 
-func TestProjectConfigUnsetMissingName(t *testing.T) {
-	var c projectConfigUnset
+func TestProjectEnvVarUnsetMissingName(t *testing.T) {
+	var c projectEnvVarUnset
 	err := c.Flags().Parse(true, []string{"-e", "dev,stage,prod"})
 	if err != nil {
 		t.Fatal(err)
@@ -539,7 +539,7 @@ func TestProjectConfigUnsetMissingName(t *testing.T) {
 	}
 }
 
-func TestProjectConfigUnsetAppNotFound(t *testing.T) {
+func TestProjectEnvVarUnsetAppNotFound(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	appNames := []string{"proj1-dev", "proj1-prod"}
@@ -557,7 +557,7 @@ func TestProjectConfigUnsetAppNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigUnset
+	var c projectEnvVarUnset
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",
@@ -586,7 +586,7 @@ unsetting config vars from environment "prod"... ok
 	}
 }
 
-func TestProjectConfigUnsetError(t *testing.T) {
+func TestProjectEnvVarUnsetError(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
@@ -611,7 +611,7 @@ func TestProjectConfigUnsetError(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cleanup()
-	var c projectConfigUnset
+	var c projectEnvVarUnset
 	err = c.Flags().Parse(true, []string{
 		"-n", "proj1",
 		"-e", "dev,stage,prod",

@@ -179,35 +179,35 @@ func TestProjectListIsRegistered(t *testing.T) {
 	}
 }
 
-func TestProjectConfigGetIsRegistered(t *testing.T) {
+func TestProjectEnvVarGetIsRegistered(t *testing.T) {
 	manager := buildManager("tranor")
-	gotCommand, ok := manager.Commands["config-get"]
+	gotCommand, ok := manager.Commands["envvar-get"]
 	if !ok {
-		t.Error("command config-get not found")
+		t.Error("command envvar-get not found")
 	}
-	if _, ok := gotCommand.(*projectConfigGet); !ok {
+	if _, ok := gotCommand.(*projectEnvVarGet); !ok {
 		t.Errorf("command %#v is not of type projectConfigGet{}", gotCommand)
 	}
 }
 
-func TestProjectConfigSetIsRegistered(t *testing.T) {
+func TestProjectEnvVarSetIsRegistered(t *testing.T) {
 	manager := buildManager("tranor")
-	gotCommand, ok := manager.Commands["config-set"]
+	gotCommand, ok := manager.Commands["envvar-set"]
 	if !ok {
-		t.Error("command config-set not found")
+		t.Error("command envvar-set not found")
 	}
-	if _, ok := gotCommand.(*projectConfigSet); !ok {
+	if _, ok := gotCommand.(*projectEnvVarSet); !ok {
 		t.Errorf("command %#v is not of type projectConfigSet{}", gotCommand)
 	}
 }
 
-func TestProjectConfigUnsetIsRegistered(t *testing.T) {
+func TestProjectEnvVarUnsetIsRegistered(t *testing.T) {
 	manager := buildManager("tranor")
-	gotCommand, ok := manager.Commands["config-unset"]
+	gotCommand, ok := manager.Commands["envvar-unset"]
 	if !ok {
-		t.Error("command config-unset not found")
+		t.Error("command envvar-unset not found")
 	}
-	if _, ok := gotCommand.(*projectConfigUnset); !ok {
+	if _, ok := gotCommand.(*projectEnvVarUnset); !ok {
 		t.Errorf("command %#v is not of type projectConfigUnset{}", gotCommand)
 	}
 }

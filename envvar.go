@@ -39,6 +39,10 @@ func (c *projectEnvVarSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.projectName == "" {
 		return errors.New("please provide the name of the project")
 	}
+	config, err := loadConfigFile()
+	if err != nil {
+		return errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
 	raw := strings.Join(ctx.Args, "\n")
 	regex := regexp.MustCompile(`(\w+=[^\n]+)(\n|$)`)
 	decls := regex.FindAllStringSubmatch(raw, -1)
@@ -53,8 +57,12 @@ func (c *projectEnvVarSet) Run(ctx *cmd.Context, client *cmd.Client) error {
 		parts := strings.SplitN(decl[1], "=", 2)
 		envVars.Envs = append(envVars.Envs, struct{ Name, Value string }{Name: parts[0], Value: parts[1]})
 	}
+	envNames := c.envs.Values()
+	if len(envNames) == 0 {
+		envNames = config.envNames()
+	}
 	var cmdErr error
-	for _, envName := range c.envs.Values() {
+	for _, envName := range envNames {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "setting variables in environment %q... ", envName)
 		err := setEnvVars(client, appName, &envVars)

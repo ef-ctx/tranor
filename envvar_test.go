@@ -7,7 +7,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/tsuru/tsuru/cmd"
@@ -73,6 +75,53 @@ setting variables in environment "prod"... ok
 	}
 }
 
+func TestProjectEnvVarSetDefaultEnvs(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	appNames := []string{"proj1-dev", "proj1-qa", "proj1-stage", "proj1-prod"}
+	for _, appName := range appNames {
+		server.prepareResponse(preparedResponse{
+			method:  "POST",
+			path:    "/apps/" + appName + "/env",
+			code:    http.StatusOK,
+			payload: []byte("{}"),
+		})
+	}
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectEnvVarSet
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj1",
+		"--no-restart",
+		"-p",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Args:   []string{"USER_NAME=root", "USER_PASSWORD=r00t", `PREFERRED_TEAM="some nice team"`},
+	}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `setting variables in environment "dev"... ok
+setting variables in environment "qa"... ok
+setting variables in environment "stage"... ok
+setting variables in environment "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
 func TestProjectEnvVarSetMissingName(t *testing.T) {
 	var c projectEnvVarSet
 	err := c.Flags().Parse(true, []string{"--no-restart"})
@@ -93,8 +142,15 @@ func TestProjectEnvVarSetMissingName(t *testing.T) {
 }
 
 func TestProjectEnvVarSetInvalidFormat(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
 	var c projectEnvVarSet
-	err := c.Flags().Parse(true, []string{"-n", "proj1"})
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,6 +164,26 @@ func TestProjectEnvVarSetInvalidFormat(t *testing.T) {
 	expectedMsg := "configuration vars must be specified in the form NAME=value"
 	if err.Error() != expectedMsg {
 		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
+func TestProjectEnvVarSetNoConfiguration(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	var c projectEnvVarSet
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	err = c.Run(&ctx, nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
 	}
 }
 

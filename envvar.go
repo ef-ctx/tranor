@@ -111,7 +111,15 @@ func (c *projectEnvVarGet) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.projectName == "" {
 		return errors.New("please provide the name of the project")
 	}
-	for _, envName := range c.envs.Values() {
+	config, err := loadConfigFile()
+	if err != nil {
+		return errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
+	envNames := c.envs.Values()
+	if len(envNames) == 0 {
+		envNames = config.envNames()
+	}
+	for _, envName := range envNames {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		envVars, err := getEnvVars(client, appName)
 		if err != nil {

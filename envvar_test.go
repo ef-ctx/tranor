@@ -697,6 +697,73 @@ unsetting variables from environment "prod"... ok
 	}
 }
 
+func TestProjectEnvVarUnsetDefaultEnvs(t *testing.T) {
+	server := newFakeServer(t)
+	defer server.stop()
+	appNames := []string{"proj1-dev", "proj1-qa", "proj1-stage", "proj1-prod"}
+	for _, appName := range appNames {
+		server.prepareResponse(preparedResponse{
+			method:   "DELETE",
+			path:     "/apps/" + appName + "/env",
+			code:     http.StatusOK,
+			payload:  []byte("{}"),
+			ignoreQS: true,
+		})
+	}
+	cleanup, err := setupFakeTarget(server.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectEnvVarUnset
+	err = c.Flags().Parse(true, []string{
+		"-n", "proj1",
+		"--no-restart",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Args:   []string{"USER_NAME", "USER_PASSWORD", "PREFERRED_TEAM"},
+	}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `unsetting variables from environment "dev"... ok
+unsetting variables from environment "qa"... ok
+unsetting variables from environment "stage"... ok
+unsetting variables from environment "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectEnvVarUnsetNoConfiguration(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	var c projectEnvVarUnset
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	err = c.Run(&ctx, nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
 func TestProjectEnvVarUnsetMissingName(t *testing.T) {
 	var c projectEnvVarUnset
 	err := c.Flags().Parse(true, []string{"-e", "dev,stage,prod"})

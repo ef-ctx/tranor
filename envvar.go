@@ -168,8 +168,16 @@ func (c *projectEnvVarUnset) Run(ctx *cmd.Context, client *cmd.Client) error {
 	if c.projectName == "" {
 		return errors.New("please provide the name of the project")
 	}
+	config, err := loadConfigFile()
+	if err != nil {
+		return errors.New("unable to load environments file, please make sure that tranor is properly configured")
+	}
+	envNames := c.envs.Values()
+	if len(envNames) == 0 {
+		envNames = config.envNames()
+	}
 	var cmdErr error
-	for _, envName := range c.envs.Values() {
+	for _, envName := range envNames {
 		appName := fmt.Sprintf("%s-%s", c.projectName, envName)
 		fmt.Fprintf(ctx.Stdout, "unsetting variables from environment %q... ", envName)
 		err := unsetEnvVars(client, appName, c.noRestart, ctx.Args)

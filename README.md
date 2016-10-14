@@ -47,13 +47,31 @@ For more details and some terminal session examples, check the
 ##Contributing and running tests
 
 Contributions are welcome! In order to run tests locally, you need to be have
-Go 1.6+ (or 1.5 with GO15VENDOREXPERIMENT on) and run:
+Go 1.7+ and run:
 
 ```
 % go test
 ```
 
-You can also get a coverage report with the `-cover` flag:
+You can run integration tests against a real tsuru server. The test suite
+assumes that the platform ``python`` is available, as well as the pools
+``dev\dev.example.com``, ``qa\qa.example.com``, ``stage\stage.example.com`` and
+``prod\example.com``. Having all requirements satisfied, one can run:
+
+```
+% TSURU_TEST_HOST=<tsuru-server> TSURU_TEST_TOKEN=<token-value> go test
+```
+
+If you have tsuru-admin available, you can run ``make prepare-test-server``:
+
+```
+% TSURU_TEST_HOST=<tsuru-server> TSURU_TEST_TOKEN=<token-value> make prepare-test-server
+```
+
+You can get the value of TSURU_TEST_HOST with the command ``tsuru target-list``
+and the value of TSURU_TEST_TOKEN with the command ``tsuru token-show``.
+
+You can also enable coverage report with the `-cover` flag:
 
 ```
 % go test -cover

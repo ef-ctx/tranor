@@ -39,7 +39,8 @@ func newFakeTsuruServer() *fakeTsuruServer {
 
 func (s *fakeTsuruServer) buildRouter() {
 	s.router = mux.NewRouter()
-	s.router.HandleFunc("/apps", func(w http.ResponseWriter, r *http.Request) {
+	r := s.router.PathPrefix("/1.0").Subrouter()
+	r.HandleFunc("/apps", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
 			s.createApp(w, r)
@@ -49,7 +50,7 @@ func (s *fakeTsuruServer) buildRouter() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	s.router.HandleFunc("/apps/{appname}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/apps/{appname}", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "PUT":
 			s.updateApp(w, r)
@@ -61,7 +62,7 @@ func (s *fakeTsuruServer) buildRouter() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	s.router.HandleFunc("/apps/{appname}/env", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/apps/{appname}/env", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
 			s.setEnvs(w, r)
@@ -73,8 +74,8 @@ func (s *fakeTsuruServer) buildRouter() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	s.router.HandleFunc("/deploys", s.listDeploys)
-	s.router.HandleFunc("/apps/{appname}/cname", s.addCName)
+	r.HandleFunc("/deploys", s.listDeploys)
+	r.HandleFunc("/apps/{appname}/cname", s.addCName)
 }
 
 func (s *fakeTsuruServer) createApp(w http.ResponseWriter, r *http.Request) {

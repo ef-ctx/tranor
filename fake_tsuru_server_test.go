@@ -305,10 +305,6 @@ func (s *fakeTsuruServer) findApp(name string) (a app, index int) {
 	return a, index
 }
 
-func (s *fakeTsuruServer) stop() {
-	s.server.Close()
-}
-
 func (s *fakeTsuruServer) url() string {
 	return s.server.URL
 }

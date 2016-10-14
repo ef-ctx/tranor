@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsuru/tsuru/api"
 	"github.com/tsuru/tsuru/cmd"
 	"github.com/tsuru/tsuru/errors"
 )
@@ -475,5 +476,262 @@ func TestGetAppNoTarget(t *testing.T) {
 	_, err = getApp(nil, "proj1-prod")
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestSetEnvVars(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		code:    http.StatusOK,
+		method:  "POST",
+		path:    "/apps/proj1-prod/env",
+		payload: []byte("{}"),
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = setEnvVars(client, "proj1-prod", &api.Envs{
+		Private:   true,
+		NoRestart: true,
+		Envs: []struct {
+			Name  string
+			Value string
+		}{
+			{Name: "USER_NAME", Value: "root"},
+			{Name: "USER_PASSWORD", Value: "r00t"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedPayload := url.Values{
+		"NoRestart":    []string{"true"},
+		"Private":      []string{"true"},
+		"Envs.0.Name":  []string{"USER_NAME"},
+		"Envs.0.Value": []string{"root"},
+		"Envs.1.Name":  []string{"USER_PASSWORD"},
+		"Envs.1.Value": []string{"r00t"},
+	}
+	payload, err := url.ParseQuery(string(fakeServer.payloads[0]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(payload, expectedPayload) {
+		t.Errorf("wrong payload\nwant %#v\ngot  %#v", expectedPayload, payload)
+	}
+}
+
+func TestSetEnvVarsNotFound(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = setEnvVars(client, "proj1-prod", nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	e := err.(*errors.HTTP)
+	if e.Code != http.StatusNotFound {
+		t.Errorf("wrong error code. Want %d. Got %d", http.StatusNotFound, e.Code)
+	}
+}
+
+func TestSetEnvVarsNoTarget(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	err = setEnvVars(nil, "proj1-prod", nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestGetEnvVars(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		code:    http.StatusOK,
+		method:  "GET",
+		path:    "/apps/proj1-prod/env",
+		payload: []byte(`[{"name":"USER_NAME","value":"root","public":true},{"name":"USER_PASSWORD","value":"r00t","public":false}]`),
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	evars, err := getEnvVars(client, "proj1-prod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedVars := []envVar{
+		{
+			Name:   "USER_NAME",
+			Value:  "root",
+			Public: true,
+		},
+		{
+			Name:  "USER_PASSWORD",
+			Value: "r00t",
+		},
+	}
+	if !reflect.DeepEqual(evars, expectedVars) {
+		t.Errorf("wrong list of vars\nwant %#v\ngot  %#v", expectedVars, evars)
+	}
+}
+
+func TestGetEnvVarsNotFound(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	evars, err := getEnvVars(client, "proj1-prod")
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	if evars != nil {
+		t.Fatalf("unexpected non-nil vars: %#v", evars)
+	}
+	e := err.(*errors.HTTP)
+	if e.Code != http.StatusNotFound {
+		t.Errorf("wrong error code. Want %d. Got %d", http.StatusNotFound, e.Code)
+	}
+}
+
+func TestGetEnvVarsNoTarget(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	evars, err := getEnvVars(nil, "proj1-prod")
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	if evars != nil {
+		t.Fatalf("unexpected non-nil vars: %#v", evars)
+	}
+}
+
+func TestUnsetEnvVars(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		code:     http.StatusOK,
+		method:   "DELETE",
+		path:     "/apps/proj1-prod/env",
+		payload:  []byte("{}"),
+		ignoreQS: true,
+	})
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = unsetEnvVars(client, "proj1-prod", true, []string{"USER_NAME", "USER_PASSWORD", "PASSWORD_HINT"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedQS := url.Values{
+		"noRestart": []string{"true"},
+		"env":       []string{"USER_NAME", "USER_PASSWORD", "PASSWORD_HINT"},
+	}
+	qs := fakeServer.reqs[0].URL.Query()
+	if !reflect.DeepEqual(qs, expectedQS) {
+		t.Errorf("wrong querystring\nwant %#v\ngot  %#v", expectedQS, qs)
+	}
+}
+
+func TestUnsetEnvVarsNotFound(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	cleanup, err := setupFakeTarget(fakeServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = unsetEnvVars(client, "proj1-prod", false, nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	e := err.(*errors.HTTP)
+	if e.Code != http.StatusNotFound {
+		t.Errorf("wrong error code. Want %d. Got %d", http.StatusNotFound, e.Code)
+	}
+}
+
+func TestUnsetEnvVarsNoTarget(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("HOME", dir)
+	err = unsetEnvVars(nil, "proj1-prod", false, nil)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+}
+
+func TestEnvVarStringRepr(t *testing.T) {
+	var tests = []struct {
+		testCase string
+		input    envVar
+		expected string
+	}{
+		{
+			"public variable",
+			envVar{
+				Name:   "USER_NAME",
+				Value:  "root",
+				Public: true,
+			},
+			"USER_NAME=root",
+		},
+		{
+			"private variable",
+			envVar{
+				Name:  "USER_PASSWORD",
+				Value: "r00t",
+			},
+			"USER_PASSWORD=*** (private variable)",
+		},
+	}
+	for _, test := range tests {
+		repr := test.input.String()
+		if repr != test.expected {
+			t.Errorf("%s: wrong representation\nwant %q\ngot  %q", test.testCase, test.expected, repr)
+		}
 	}
 }

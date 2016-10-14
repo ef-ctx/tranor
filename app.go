@@ -11,9 +11,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/cezarsa/form"
+	"github.com/tsuru/tsuru/api"
 	"github.com/tsuru/tsuru/cmd"
 )
 
@@ -155,6 +158,59 @@ func getApp(client *cmd.Client, appName string) (app, error) {
 	return a, err
 }
 
+func setEnvVars(client *cmd.Client, appName string, envVars *api.Envs) error {
+	url, err := cmd.GetURL("/apps/" + appName + "/env")
+	if err != nil {
+		return err
+	}
+	v, err := form.EncodeToValues(envVars)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", url, strings.NewReader(v.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	return cmd.StreamJSONResponse(ioutil.Discard, resp)
+}
+
+func getEnvVars(client *cmd.Client, appName string) ([]envVar, error) {
+	var vars []envVar
+	resp, err := doReq(client, "/apps/"+appName+"/env")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(&vars)
+	return vars, err
+}
+
+func unsetEnvVars(client *cmd.Client, appName string, noRestart bool, envVars []string) error {
+	qs := make(url.Values)
+	qs.Set("noRestart", strconv.FormatBool(noRestart))
+	for _, e := range envVars {
+		qs.Add("env", e)
+	}
+	url, err := cmd.GetURL("/apps/" + appName + "/env?" + qs.Encode())
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	return cmd.StreamJSONResponse(ioutil.Discard, resp)
+}
+
 func doReq(client *cmd.Client, path string) (*http.Response, error) {
 	url, err := cmd.GetURL(path)
 	if err != nil {
@@ -165,6 +221,20 @@ func doReq(client *cmd.Client, path string) (*http.Response, error) {
 		return nil, err
 	}
 	return client.Do(req)
+}
+
+type envVar struct {
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+	Public bool   `json:"public"`
+}
+
+func (e *envVar) String() string {
+	value := "*** (private variable)"
+	if e.Public {
+		value = e.Value
+	}
+	return fmt.Sprintf("%s=%s", e.Name, value)
 }
 
 type app struct {

@@ -401,7 +401,7 @@ const appInfo5 = `{
   "name": "proj3-dev",
   "owner": "webmaster@example.com",
   "plan": {
-    "name": "medium",
+    "name": "%s",
     "memory": 536870912,
     "swap": 1073741824,
     "cpushare": 1024,
@@ -441,7 +441,7 @@ const appInfo6 = `{
   "name": "proj3-prod",
   "owner": "webmaster@example.com",
   "plan": {
-    "name": "medium",
+    "name": "%s",
     "memory": 536870912,
     "swap": 1073741824,
     "cpushare": 1024,

@@ -21,23 +21,12 @@ import (
 )
 
 type createAppOptions struct {
-	name        string
-	description string
-	platform    string
-	team        string
-	plan        string
-	pool        string
-}
-
-func (o *createAppOptions) encode() string {
-	values := make(url.Values)
-	values.Set("name", o.name)
-	values.Set("description", o.description)
-	values.Set("platform", o.platform)
-	values.Set("plan", o.plan)
-	values.Set("teamOwner", o.team)
-	values.Set("pool", o.pool)
-	return values.Encode()
+	Name        string `form:"name"`
+	Platform    string `form:"platform"`
+	Description string `form:"description,omitempty"`
+	Team        string `form:"teamOwner,omitempty"`
+	Plan        string `form:"plan,omitempty"`
+	Pool        string `form:"pool,omitempty"`
 }
 
 func createApp(client *cmd.Client, opts createAppOptions) (map[string]string, error) {
@@ -45,7 +34,8 @@ func createApp(client *cmd.Client, opts createAppOptions) (map[string]string, er
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("POST", url, strings.NewReader(opts.encode()))
+	payload, _ := form.EncodeToString(opts)
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +51,14 @@ func createApp(client *cmd.Client, opts createAppOptions) (map[string]string, er
 }
 
 func updateApp(client *cmd.Client, opts createAppOptions) error {
-	url, err := cmd.GetURL("/apps/" + opts.name)
+	url, err := cmd.GetURL("/apps/" + opts.Name)
 	if err != nil {
 		return err
 	}
-	opts.name = ""
-	opts.platform = ""
-	req, err := http.NewRequest("PUT", url, strings.NewReader(opts.encode()))
+	opts.Name = ""
+	opts.Platform = ""
+	payload, _ := form.EncodeToString(opts)
+	req, err := http.NewRequest("PUT", url, strings.NewReader(payload))
 	if err != nil {
 		return err
 	}

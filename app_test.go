@@ -38,12 +38,12 @@ func TestCreateApp(t *testing.T) {
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
 	app, err := createApp(client, createAppOptions{
-		name:        "app",
-		description: "my nice app",
-		plan:        "medium",
-		platform:    "python",
-		pool:        "mypool",
-		team:        "admin",
+		Name:        "app",
+		Description: "my nice app",
+		Plan:        "medium",
+		Platform:    "python",
+		Pool:        "mypool",
+		Team:        "admin",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -110,12 +110,12 @@ func TestUpdateApp(t *testing.T) {
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
 	err = updateApp(client, createAppOptions{
-		name:        "myapp",
-		description: "my nice app - updated!",
-		plan:        "medium",
-		platform:    "",
-		pool:        "mypool",
-		team:        "admin",
+		Name:        "myapp",
+		Description: "my nice app - updated!",
+		Plan:        "medium",
+		Platform:    "",
+		Pool:        "mypool",
+		Team:        "admin",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -155,12 +155,12 @@ func TestUpdateAppNotFound(t *testing.T) {
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
 	err = updateApp(client, createAppOptions{
-		name:        "myapp",
-		description: "my nice app - updated!",
-		plan:        "medium",
-		platform:    "",
-		pool:        "mypool",
-		team:        "admin",
+		Name:        "myapp",
+		Description: "my nice app - updated!",
+		Plan:        "medium",
+		Platform:    "",
+		Pool:        "mypool",
+		Team:        "admin",
 	})
 	if err == nil {
 		t.Fatal("unexpected <nil> error")

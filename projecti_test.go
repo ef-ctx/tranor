@@ -459,6 +459,123 @@ func TestProjectUpdateOnlyEnvs(t *testing.T) {
 	}
 }
 
+func TestProjectRemove(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	appMaps, err := createApps([]Environment{
+		{Name: "dev", DNSSuffix: "dev.example.com"},
+		{Name: "qa", DNSSuffix: "qa.example.com"},
+		{Name: "stage", DNSSuffix: "stage.example.com"},
+		{Name: "prod", DNSSuffix: "example.com"},
+	}, client, "myproj", createAppOptions{
+		Description: "my nice project",
+		Team:        "myteam",
+		Plan:        "medium",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = setCNames(appMaps, client, "myproj")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectRemove
+	err = c.Flags().Parse(true, []string{"-yn", "myproj"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `Deleting from env "dev"... ok
+Deleting from env "qa"... ok
+Deleting from env "stage"... ok
+Deleting from env "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("Wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectRemoveSomeEnvironments(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	appMaps, err := createApps([]Environment{
+		{Name: "dev", DNSSuffix: "dev.example.com"},
+		{Name: "prod", DNSSuffix: "stage.example.com"},
+	}, client, "myproj", createAppOptions{
+		Description: "my nice project",
+		Team:        "myteam",
+		Plan:        "medium",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = setCNames(appMaps, client, "myproj")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectRemove
+	err = c.Flags().Parse(true, []string{"-yn", "myproj"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `Deleting from env "dev"... ok
+Deleting from env "qa"... ok
+Deleting from env "stage"... ok
+Deleting from env "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("Wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectRemoveNotFound(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectRemove
+	err = c.Flags().Parse(true, []string{"-yn", "myproj"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
+	}
+	expectedMessage := "project not found"
+	if err.Error() != expectedMessage {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMessage, err.Error())
+	}
+}
+
 type appList []app
 
 func (s appList) Len() int {

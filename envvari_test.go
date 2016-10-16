@@ -165,3 +165,183 @@ setting variables in environment "prod"... ok
 		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
 	}
 }
+
+func TestProjectEnvVarGet(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	config, _ := loadConfigFile()
+	_, err = createApps(config.Environments, client, "myproj", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectEnvVarGet
+	err = c.Flags().Parse(true, []string{
+		"-n", "myproj",
+		"-e", "dev,stage,prod",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `variables in "dev":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+variables in "stage":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+variables in "prod":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%q\ngot:\n%q", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectEnvVarGetDefaultEnvs(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	config, _ := loadConfigFile()
+	_, err = createApps(config.Environments, client, "myproj", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectEnvVarGet
+	err = c.Flags().Parse(true, []string{"-n", "myproj"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `variables in "dev":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+variables in "qa":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+variables in "stage":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+variables in "prod":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%q\ngot:\n%q", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectEnvVarGetAppNotFound(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	_, err = createApps([]Environment{
+		{Name: "dev", DNSSuffix: "dev.example.com"},
+		{Name: "prod", DNSSuffix: "example.com"},
+	}, client, "myproj", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectEnvVarGet
+	err = c.Flags().Parse(true, []string{
+		"-n", "myproj",
+		"-e", "dev,stage,prod",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `variables in "dev":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+variables in "prod":
+
+ TSURU_APPDIR=*** (private variable)
+ TSURU_APPNAME=*** (private variable)
+ TSURU_APP_TOKEN=*** (private variable)
+
+
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%q\ngot:\n%q", expectedOutput, stdout.String())
+	}
+	expectedStderr := `WARNING: project not found in environment "stage"` + "\n"
+	if stderr.String() != expectedStderr {
+		t.Errorf("wrong error output\nwant:\n%q\ngot:\n%q", expectedStderr, stderr.String())
+	}
+}

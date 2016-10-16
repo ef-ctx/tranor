@@ -76,6 +76,8 @@ func (s *fakeTsuruServer) buildRouter() {
 	})
 	r.HandleFunc("/deploys", s.listDeploys)
 	r.HandleFunc("/apps/{appname}/cname", s.addCName)
+	r.HandleFunc("/apps/{appname}/quota", s.getAppQuota)
+	r.HandleFunc("/services/instances", s.serviceInstances)
 }
 
 func (s *fakeTsuruServer) createApp(w http.ResponseWriter, r *http.Request) {
@@ -288,6 +290,14 @@ func (s *fakeTsuruServer) addCName(w http.ResponseWriter, r *http.Request) {
 	}
 	a.CName = append(a.CName, cName)
 	s.apps[index] = a
+}
+
+func (s *fakeTsuruServer) getAppQuota(w http.ResponseWriter, r *http.Request) {
+	s.writeJSON(w, map[string]interface{}{"Limit": -1})
+}
+
+func (s *fakeTsuruServer) serviceInstances(w http.ResponseWriter, r *http.Request) {
+	s.writeJSON(w, map[string]interface{}{})
 }
 
 func (s *fakeTsuruServer) writeJSON(w http.ResponseWriter, data interface{}) {

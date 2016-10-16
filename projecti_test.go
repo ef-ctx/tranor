@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tsuru/tsuru-client/tsuru/client"
 	"github.com/tsuru/tsuru/cmd"
 )
 
@@ -656,6 +657,48 @@ func TestProjectInfoNotFound(t *testing.T) {
 	expectedMsg := "project not found"
 	if err.Error() != expectedMsg {
 		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
+	}
+}
+
+func TestProjectEnvInfo(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	cli := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	_, err = createApp(cli, createAppOptions{
+		Name:     "proj1-prod",
+		Platform: "python",
+		Team:     "myteam",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	var appInfoCmd client.AppInfo
+	err = appInfoCmd.Flags().Parse(true, []string{"-a", "proj1-prod"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = appInfoCmd.Run(&cmd.Context{Stdout: &buf}, cli)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectEnvInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1", "-e", "prod"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, cli)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stdout.String() != buf.String() {
+		t.Errorf("Wrong output\nWant:\n%s\nGot:\n%s", &buf, &stdout)
 	}
 }
 

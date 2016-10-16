@@ -17,8 +17,6 @@ import (
 	"github.com/tsuru/tsuru/api"
 )
 
-var tsuruServer = newFakeTsuruServer()
-
 // fakeTsuruServer provides a non-thread-safe, partial implementation of the
 // tsuru API.
 type fakeTsuruServer struct {

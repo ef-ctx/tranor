@@ -81,7 +81,7 @@ func TestProjectCreateDefaultEnvs(t *testing.T) {
 		}
 	}
 	expectedOutput := `successfully created the project "myproj"!
-` + apps[0].repoLine()
+` + repoLine(apps[0])
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output returned\nWant: %s\nGot:  %s", expectedOutput, stdout.String())
 	}
@@ -152,7 +152,7 @@ func TestProjectCreateSpecifyEnvs(t *testing.T) {
 		}
 	}
 	expectedOutput := `successfully created the project "superproj"!
-` + apps[0].repoLine()
+` + repoLine(apps[0])
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output returned\nWant: %s\nGot:  %s", expectedOutput, stdout.String())
 	}
@@ -819,4 +819,11 @@ func (s appList) Less(i, j int) bool {
 
 func (s appList) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
+}
+
+func repoLine(a app) string {
+	if a.RepositoryURL == "" {
+		return ""
+	}
+	return fmt.Sprintf("Git repository: %s\n", a.RepositoryURL)
 }

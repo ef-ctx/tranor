@@ -246,13 +246,6 @@ type app struct {
 	} `json:"plan"`
 }
 
-func (a *app) repoLine() string {
-	if a.RepositoryURL == "" {
-		return ""
-	}
-	return fmt.Sprintf("Git repository: %s\n", a.RepositoryURL)
-}
-
 type deploy struct {
 	ID        string
 	Commit    string

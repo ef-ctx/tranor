@@ -702,6 +702,69 @@ func TestProjectEnvInfo(t *testing.T) {
 	}
 }
 
+func TestProjectList(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	config, _ := loadConfigFile()
+	for _, projName := range []string{"myproj1", "myproj2"} {
+		appMaps, innerErr := createApps(config.Environments, client, projName, createAppOptions{
+			Plan:        "medium",
+			Description: "my nice project",
+			Team:        "myteam",
+			Platform:    "python",
+		})
+		innerErr = setCNames(appMaps, client, projName)
+		if innerErr != nil {
+			t.Fatal(innerErr)
+		}
+	}
+	appMaps, err := createApps([]Environment{
+		{Name: "dev", DNSSuffix: "dev.example.com"},
+		{Name: "prod", DNSSuffix: "example.com"},
+	}, client, "myproj3", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	err = setCNames(appMaps, client, "myproj3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectList
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `+---------+--------------+---------------------------+
+| Project | Environments | Address                   |
++---------+--------------+---------------------------+
+| myproj1 | dev          | myproj1.dev.example.com   |
+|         | qa           | myproj1.qa.example.com    |
+|         | stage        | myproj1.stage.example.com |
+|         | prod         | myproj1.example.com       |
++---------+--------------+---------------------------+
+| myproj2 | dev          | myproj2.dev.example.com   |
+|         | qa           | myproj2.qa.example.com    |
+|         | stage        | myproj2.stage.example.com |
+|         | prod         | myproj2.example.com       |
++---------+--------------+---------------------------+
+| myproj3 | dev          | myproj3.dev.example.com   |
+|         | prod         | myproj3.example.com       |
++---------+--------------+---------------------------+
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
 type appList []app
 
 func (s appList) Len() int {

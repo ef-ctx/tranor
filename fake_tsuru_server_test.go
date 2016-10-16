@@ -115,8 +115,8 @@ func (s *fakeTsuruServer) createApp(w http.ResponseWriter, r *http.Request) {
 	})
 	s.envVars[opts.Name] = []envVar{
 		{Name: "TSURU_APPDIR", Value: "something"},
-		{Name: "TSURU_APPNAME", Value: opts.Name},
 		{Name: "TSURU_APP_TOKEN", Value: "sometoken"},
+		{Name: "TSURU_APPNAME", Value: opts.Name},
 	}
 	s.deploys[opts.Name] = nil
 	s.writeJSON(w, map[string]string{"repository_url": repositoryURL})

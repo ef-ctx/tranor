@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/tsuru/gnuflag"
@@ -130,9 +131,12 @@ func (c *projectEnvVarGet) Run(ctx *cmd.Context, client *cmd.Client) error {
 			return err
 		}
 		fmt.Fprintf(ctx.Stdout, "variables in %q:\n\n", envName)
-		for _, evar := range envVars {
-			fmt.Fprintf(ctx.Stdout, " %s\n", &evar)
+		lines := make([]string, len(envVars))
+		for i, evar := range envVars {
+			lines[i] = fmt.Sprintf(" %s", &evar)
 		}
+		sort.Strings(lines)
+		fmt.Fprintln(ctx.Stdout, strings.Join(lines, "\n"))
 		fmt.Fprint(ctx.Stdout, "\n\n")
 	}
 	return nil

@@ -115,6 +115,8 @@ func (s *fakeTsuruServer) createApp(w http.ResponseWriter, r *http.Request) {
 		RepositoryURL: repositoryURL,
 		Addr:          opts.Name + ".tsuru.example.com",
 	})
+	s.envVars[opts.Name] = nil
+	s.deploys[opts.Name] = nil
 	s.writeJSON(w, map[string]string{"repository_url": repositoryURL})
 }
 

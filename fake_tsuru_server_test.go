@@ -326,6 +326,10 @@ func (s *fakeTsuruServer) url() string {
 	return s.server.URL
 }
 
+func (s *fakeTsuruServer) token() string {
+	return "whatever"
+}
+
 func (s *fakeTsuruServer) reset() {
 	s.apps = nil
 	s.envVars = make(map[string][]envVar)

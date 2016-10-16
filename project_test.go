@@ -109,7 +109,7 @@ func TestProjectCreateNoRepo(t *testing.T) {
 			payload: []byte(`{}`),
 		})
 	}
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func TestProjectCreateMissingParams(t *testing.T) {
 			[]string{},
 		},
 	}
-	cleanup, err := setupFakeTarget("http://localhost:8080")
+	cleanup, err := setupFakeConfig("http://localhost:8080", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func TestProjectCreateMissingParams(t *testing.T) {
 }
 
 func TestProjectCreateInvalidEnv(t *testing.T) {
-	cleanup, err := setupFakeTarget("http://localhost:8080")
+	cleanup, err := setupFakeConfig("http://localhost:8080", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -260,7 +260,7 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 		code:    http.StatusInternalServerError,
 		payload: []byte(`{}`),
 	})
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -333,7 +333,7 @@ func TestProjectUpdateNotFound(t *testing.T) {
 		path:   "/apps?name=" + url.QueryEscape("^proj3"),
 		code:   http.StatusNoContent,
 	})
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -390,7 +390,7 @@ func TestProjectUpdateFailToCreateNewApps(t *testing.T) {
 		code:    http.StatusInternalServerError,
 		payload: []byte(`{}`),
 	})
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +453,7 @@ func TestProjectUpdateFailToSetCNames(t *testing.T) {
 		path:   "/apps/proj3-stage/cname",
 		code:   http.StatusInternalServerError,
 	})
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -526,7 +526,7 @@ func TestProjectUpdateFailToUpdate(t *testing.T) {
 		path:   "/apps/proj3-stage/cname",
 		code:   http.StatusOK,
 	})
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -573,7 +573,7 @@ func TestProjectUpdateInvalidNewEnv(t *testing.T) {
 			payload: payload,
 		})
 	}
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -617,7 +617,7 @@ func TestProjectUpdateDuplicateEnv(t *testing.T) {
 			payload: payload,
 		})
 	}
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -665,7 +665,7 @@ func TestProjectUpdateInvalidRemoveEnvs(t *testing.T) {
 			payload: payload,
 		})
 	}
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -717,7 +717,7 @@ func TestProjectUpdateFailToLoadConfig(t *testing.T) {
 }
 
 func TestRemoveProjectNoConfirmation(t *testing.T) {
-	cleanup, err := setupFakeTarget("http://localhost:8080")
+	cleanup, err := setupFakeConfig("http://localhost:8080", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -784,7 +784,7 @@ func TestProjectInfoErrorToListApps(t *testing.T) {
 		code:    http.StatusInternalServerError,
 		payload: []byte("something went wrong"),
 	})
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -881,7 +881,7 @@ func TestProjectListErrorToListApps(t *testing.T) {
 		code:    http.StatusInternalServerError,
 		payload: []byte("something went wrong"),
 	})
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -912,12 +912,14 @@ func TestProjectListNoConfiguration(t *testing.T) {
 	}
 }
 
-func setupFakeTarget(target string) (func(), error) {
+func setupFakeConfig(target, token string) (func(), error) {
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {
 		return nil, err
 	}
 	os.Setenv("HOME", dir)
+	os.Unsetenv("TSURU_HOST")
+	os.Setenv("TSURU_TOKEN", token)
 	config := Config{
 		Target: target,
 		Environments: []Environment{

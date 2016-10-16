@@ -14,7 +14,7 @@ import (
 
 func TestProjectEnvVarSet(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ setting variables in environment "prod"... ok
 
 func TestProjectEnvVarSetDefaultEnvs(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +119,7 @@ setting variables in environment "prod"... ok
 
 func TestProjectEnvVarSetAppNotFound(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +168,7 @@ setting variables in environment "prod"... ok
 
 func TestProjectEnvVarGet(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,7 +227,7 @@ variables in "prod":
 
 func TestProjectEnvVarGetDefaultEnvs(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +290,7 @@ variables in "prod":
 
 func TestProjectEnvVarGetAppNotFound(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -350,7 +350,7 @@ func TestProjectEnvVarUnset(t *testing.T) {
 	tsuruServer.reset()
 	server := newFakeServer(t)
 	defer server.stop()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -393,7 +393,7 @@ unsetting variables from environment "prod"... ok
 
 func TestProjectEnvVarUnsetDefaultEnvs(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -436,7 +436,7 @@ unsetting variables from environment "prod"... ok
 
 func TestProjectEnvVarUnsetAppNotFound(t *testing.T) {
 	tsuruServer.reset()
-	cleanup, err := setupFakeTarget(tsuruServer.url())
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
 	if err != nil {
 		t.Fatal(err)
 	}

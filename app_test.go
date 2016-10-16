@@ -29,7 +29,7 @@ func TestCreateApp(t *testing.T) {
 		code:    http.StatusOK,
 		payload: []byte(`{"repository_url":"git@example.com:app.git"}`),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestUpdateApp(t *testing.T) {
 		code:    http.StatusOK,
 		payload: []byte(`{"repository_url":"git@example.com:app.git"}`),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestUpdateAppNotFound(t *testing.T) {
 		code:    http.StatusNotFound,
 		payload: []byte("app not found"),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +193,7 @@ func TestDeleteApps(t *testing.T) {
 		path:   "/apps/proj1-prod",
 		code:   http.StatusOK,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +262,7 @@ func TestListApps(t *testing.T) {
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -307,7 +307,7 @@ func TestListAppsEmpty(t *testing.T) {
 		path:   "/apps",
 		code:   http.StatusNoContent,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -349,7 +349,7 @@ func TestLastDeploy(t *testing.T) {
 		code:    http.StatusOK,
 		payload: []byte(deployments),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -380,7 +380,7 @@ func TestLastDeployEmpty(t *testing.T) {
 		path:   "/deploys?limit=1&app=myapp",
 		code:   http.StatusNoContent,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -419,7 +419,7 @@ func TestGetApp(t *testing.T) {
 		code:    http.StatusOK,
 		payload: []byte(appInfo2),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -449,7 +449,7 @@ func TestGetAppNotFound(t *testing.T) {
 		path:   "/apps/proj1-prod",
 		code:   http.StatusNotFound,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -488,7 +488,7 @@ func TestSetEnvVars(t *testing.T) {
 		path:    "/apps/proj1-prod/env",
 		payload: []byte("{}"),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -530,7 +530,7 @@ func TestSetEnvVars(t *testing.T) {
 func TestSetEnvVarsNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -570,7 +570,7 @@ func TestGetEnvVars(t *testing.T) {
 		path:    "/apps/proj1-prod/env",
 		payload: []byte(`[{"name":"USER_NAME","value":"root","public":true},{"name":"USER_PASSWORD","value":"r00t","public":false}]`),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -601,7 +601,7 @@ func TestGetEnvVars(t *testing.T) {
 func TestGetEnvVarsNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -648,7 +648,7 @@ func TestUnsetEnvVars(t *testing.T) {
 		payload:  []byte("{}"),
 		ignoreQS: true,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -673,7 +673,7 @@ func TestUnsetEnvVars(t *testing.T) {
 func TestUnsetEnvVarsNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}

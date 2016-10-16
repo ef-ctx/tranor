@@ -18,6 +18,9 @@ gotest:
 coverage:
 	go test -coverprofile=coverage.txt -covermode=atomic
 
+integration: prepare-test-server
+	go test
+
 prepare-test-server:
 	@ test -n "$${TSURU_TEST_HOST}" || (echo >&2 "please define TSURU_TEST_HOST" && exit 3)
 	@ test -n "$${TSURU_TEST_TOKEN}" || (echo >&2 "please define TSURU_TEST_TOKEN" && exit 3)

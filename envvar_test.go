@@ -50,7 +50,7 @@ func TestProjectEnvVarSetMissingName(t *testing.T) {
 func TestProjectEnvVarSetInvalidFormat(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestProjectEnvVarSetErrorInOneOfTheApps(t *testing.T) {
 			payload: []byte("{}"),
 		})
 	}
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +231,7 @@ func TestProjectEnvVarGetErrorInOneOfTheApps(t *testing.T) {
 			payload: payload,
 		})
 	}
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,7 +336,7 @@ func TestProjectEnvVarUnsetError(t *testing.T) {
 			ignoreQS: true,
 		})
 	}
-	cleanup, err := setupFakeTarget(server.url())
+	cleanup, err := setupFakeConfig(server.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}

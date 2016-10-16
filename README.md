@@ -60,13 +60,7 @@ assumes that the platform ``python`` is available, as well as the pools
 requirements satisfied, one can run:
 
 ```
-% TSURU_TEST_HOST=<tsuru-server> TSURU_TEST_TOKEN=<token-value> go test
-```
-
-If you have tsuru-admin available, you can run ``make prepare-test-server``:
-
-```
-% TSURU_TEST_HOST=<tsuru-server> TSURU_TEST_TOKEN=<token-value> make prepare-test-server
+% TSURU_TEST_HOST=<tsuru-server> TSURU_TEST_TOKEN=<token-value> make integration
 ```
 
 You can get the value of TSURU_TEST_HOST with the command ``tsuru target-list``

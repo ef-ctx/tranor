@@ -345,3 +345,139 @@ variables in "prod":
 		t.Errorf("wrong error output\nwant:\n%q\ngot:\n%q", expectedStderr, stderr.String())
 	}
 }
+
+func TestProjectEnvVarUnset(t *testing.T) {
+	tsuruServer.reset()
+	server := newFakeServer(t)
+	defer server.stop()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Args:   []string{"USER_NAME", "USER_PASSWORD", "PREFERRED_TEAM"},
+	}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	config, _ := loadConfigFile()
+	_, err = createApps(config.Environments, client, "myproj", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	var c projectEnvVarUnset
+	err = c.Flags().Parse(true, []string{
+		"-n", "myproj",
+		"-e", "dev,stage,prod",
+		"--no-restart",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `unsetting variables from environment "dev"... ok
+unsetting variables from environment "stage"... ok
+unsetting variables from environment "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectEnvVarUnsetDefaultEnvs(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Args:   []string{"USER_NAME", "USER_PASSWORD", "PREFERRED_TEAM"},
+	}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	var c projectEnvVarUnset
+	config, _ := loadConfigFile()
+	_, err = createApps(config.Environments, client, "myproj", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	err = c.Flags().Parse(true, []string{
+		"-n", "myproj",
+		"--no-restart",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `unsetting variables from environment "dev"... ok
+unsetting variables from environment "qa"... ok
+unsetting variables from environment "stage"... ok
+unsetting variables from environment "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectEnvVarUnsetAppNotFound(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Args:   []string{"USER_NAME", "USER_PASSWORD", "PREFERRED_TEAM"},
+	}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	_, err = createApps([]Environment{
+		{Name: "dev", DNSSuffix: "dev.example.com"},
+		{Name: "prod", DNSSuffix: "example.com"},
+	}, client, "myproj", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectEnvVarUnset
+	err = c.Flags().Parse(true, []string{
+		"-n", "myproj",
+		"-e", "dev,stage,prod",
+		"--no-restart",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedOutput := `unsetting variables from environment "dev"... ok
+unsetting variables from environment "stage"... not found
+unsetting variables from environment "prod"... ok
+`
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nwant:\n%s\ngot:\n%s", expectedOutput, stdout.String())
+	}
+}

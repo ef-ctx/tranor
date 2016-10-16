@@ -374,8 +374,8 @@ func TestProjectUpdateFailToCreateNewApps(t *testing.T) {
 		payload: []byte(listOfApps),
 	})
 	appRespMap := map[string][]byte{
-		"proj3-dev":  []byte(appInfo5),
-		"proj3-prod": []byte(appInfo6),
+		"proj3-dev":  []byte(appInfo2),
+		"proj3-prod": []byte(appInfo3),
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
@@ -427,8 +427,8 @@ func TestProjectUpdateFailToSetCNames(t *testing.T) {
 		payload: []byte(listOfApps),
 	})
 	appRespMap := map[string][]byte{
-		"proj3-dev":  []byte(appInfo5),
-		"proj3-prod": []byte(appInfo6),
+		"proj3-dev":  []byte(appInfo2),
+		"proj3-prod": []byte(appInfo3),
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
@@ -490,8 +490,8 @@ func TestProjectUpdateFailToUpdate(t *testing.T) {
 		payload: []byte(listOfApps),
 	})
 	appRespMap := map[string][]byte{
-		"proj3-dev":  []byte(appInfo5),
-		"proj3-prod": []byte(appInfo6),
+		"proj3-dev":  []byte(appInfo2),
+		"proj3-prod": []byte(appInfo3),
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
@@ -563,8 +563,8 @@ func TestProjectUpdateInvalidNewEnv(t *testing.T) {
 		payload: []byte(listOfApps),
 	})
 	appRespMap := map[string][]byte{
-		"proj3-dev":  []byte(appInfo5),
-		"proj3-prod": []byte(appInfo6),
+		"proj3-dev":  []byte(appInfo2),
+		"proj3-prod": []byte(appInfo3),
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
@@ -607,8 +607,8 @@ func TestProjectUpdateDuplicateEnv(t *testing.T) {
 		payload: []byte(listOfApps),
 	})
 	appRespMap := map[string][]byte{
-		"proj3-dev":  []byte(appInfo5),
-		"proj3-prod": []byte(appInfo6),
+		"proj3-dev":  []byte(appInfo2),
+		"proj3-prod": []byte(appInfo3),
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
@@ -655,8 +655,8 @@ func TestProjectUpdateInvalidRemoveEnvs(t *testing.T) {
 		payload: []byte(listOfApps),
 	})
 	appRespMap := map[string][]byte{
-		"proj3-dev":  []byte(appInfo5),
-		"proj3-prod": []byte(appInfo6),
+		"proj3-dev":  []byte(appInfo2),
+		"proj3-prod": []byte(appInfo3),
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
@@ -776,114 +776,6 @@ func TestRemoveProjectConfigurationIssue(t *testing.T) {
 	}
 }
 
-func TestProjectInfo(t *testing.T) {
-	server := newFakeServer(t)
-	defer server.stop()
-	server.prepareResponse(preparedResponse{
-		method:  "GET",
-		path:    "/apps?name=" + url.QueryEscape("^proj1"),
-		code:    http.StatusOK,
-		payload: []byte(listOfApps),
-	})
-	server.prepareResponse(preparedResponse{
-		method:  "GET",
-		path:    "/deploys?limit=1&app=proj1-dev",
-		code:    http.StatusOK,
-		payload: []byte(deployments),
-	})
-	for _, appName := range []string{"proj1-qa", "proj1-stage"} {
-		server.prepareResponse(preparedResponse{
-			method:  "GET",
-			path:    "/deploys?limit=1&app=" + appName,
-			code:    http.StatusNoContent,
-			payload: nil,
-		})
-	}
-	appRespMap := map[string][]byte{
-		"proj1-dev":   []byte(appInfo1),
-		"proj1-qa":    []byte(appInfo2),
-		"proj1-stage": []byte(appInfo3),
-		"proj1-prod":  []byte(appInfo4),
-	}
-	for appName, payload := range appRespMap {
-		server.prepareResponse(preparedResponse{
-			method:  "GET",
-			path:    "/apps/" + appName,
-			code:    http.StatusOK,
-			payload: payload,
-		})
-	}
-	cleanup, err := setupFakeTarget(server.url())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
-	var c projectInfo
-	err = c.Flags().Parse(true, []string{"-n", "proj1"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	var stdout, stderr bytes.Buffer
-	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
-	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	err = c.Run(&ctx, client)
-	if err != nil {
-		t.Fatal(err)
-	}
-	table := cmd.Table{Headers: cmd.Row([]string{"Environment", "Address", "Image", "Git hash/tag", "Deploy date", "Units"})}
-	expectedOutput := `Project name: proj1
-Description: my nice project
-Repository: git@example.com:proj1-dev.git
-Platform: python
-Teams: admin, sysop
-Owner: webmaster@example.com
-Team owner: admin` + "\n\n"
-	rows := []cmd.Row{
-		{"dev", "proj1.dev.example.com", "v938", "(git) 40244ff2866eba7e2da6eee8a6fc51464c9f604f", "Mon, 05 Sep 2016 01:24:25 UTC", "1"},
-		{"qa", "proj1.qa.example.com", "", "", "", "2"},
-		{"stage", "proj1.stage.example.com", "", "", "", "2"},
-		{"prod", "proj1.example.com", "", "", "", "5"},
-	}
-	for _, row := range rows {
-		table.AddRow(row)
-	}
-	expectedOutput += table.String()
-	if stdout.String() != expectedOutput {
-		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
-	}
-}
-
-func TestProjectInfoNotFound(t *testing.T) {
-	server := newFakeServer(t)
-	defer server.stop()
-	server.prepareResponse(preparedResponse{
-		method: "GET",
-		path:   "/apps?name=" + url.QueryEscape("^proj1"),
-		code:   http.StatusNoContent,
-	})
-	cleanup, err := setupFakeTarget(server.url())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
-	var c projectInfo
-	err = c.Flags().Parse(true, []string{"-n", "proj1"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	var stdout, stderr bytes.Buffer
-	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
-	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
-	err = c.Run(&ctx, client)
-	if err == nil {
-		t.Fatal(err)
-	}
-	expectedMsg := "project not found"
-	if err.Error() != expectedMsg {
-		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
-	}
-}
-
 func TestProjectInfoErrorToListApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
@@ -958,7 +850,7 @@ func TestProjectEnvInfo(t *testing.T) {
 		method:  "GET",
 		path:    "/apps/proj1-prod",
 		code:    http.StatusOK,
-		payload: []byte(appInfo4),
+		payload: []byte(appInfo1),
 	})
 	fakeServer.prepareResponse(preparedResponse{
 		method:  "GET",

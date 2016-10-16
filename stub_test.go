@@ -192,138 +192,6 @@ const deployments = `[
 ]`
 
 const appInfo1 = `{
-  "cname": ["proj1.dev.example.com"],
-  "deploys": 35,
-  "description": "my nice project",
-  "ip": "proj1-dev.tsuru.example.com",
-  "lock": {
-    "Locked": false,
-    "Reason": "",
-    "Owner": "",
-    "AcquireDate": "0001-01-01T00:00:00Z"
-  },
-  "name": "proj1-dev",
-  "owner": "webmaster@example.com",
-  "plan": {
-    "name": "medium",
-    "memory": 536870912,
-    "swap": 1073741824,
-    "cpushare": 1024,
-    "default": true,
-    "router": "hipache"
-  },
-  "platform": "python",
-  "pool": "mypool",
-  "repository": "git@example.com:proj1-dev.git",
-  "teamowner": "admin",
-  "teams": [
-    "admin",
-    "sysop"
-  ],
-  "units": [
-    {
-      "ID": "d7048b11e43dc1699b745dbe5a3a752c776dab37eb648c3c77a7aa2eb17d382f",
-      "Name": "",
-      "AppName": "proj1-dev",
-      "ProcessName": "web"
-    }
-  ]
-}
-`
-
-const appInfo2 = `{
-  "cname": ["proj1.qa.example.com"],
-  "deploys": 35,
-  "description": "my nice project",
-  "ip": "proj1-qa.tsuru.example.com",
-  "lock": {
-    "Locked": false,
-    "Reason": "",
-    "Owner": "",
-    "AcquireDate": "0001-01-01T00:00:00Z"
-  },
-  "name": "proj1-qa",
-  "owner": "webmaster@example.com",
-  "plan": {
-    "name": "medium",
-    "memory": 536870912,
-    "swap": 1073741824,
-    "cpushare": 1024,
-    "default": true,
-    "router": "hipache"
-  },
-  "platform": "python",
-  "pool": "mypool",
-  "repository": "git@example.com:proj1-qa.git",
-  "teamowner": "admin",
-  "teams": [
-    "admin",
-    "sysop"
-  ],
-  "units": [
-    {
-      "ID": "d7065b11e43dc1699b745dbe5a3a752c776dab37eb648c3c77a7aa20eb17d382f",
-      "Name": "",
-      "AppName": "proj1-qa",
-      "ProcessName": "web"
-    },
-    {
-      "ID": "d7065b11e43dc1699b745dbe5a3a752c776dab37eb648c3c77a7aa20eb17d382f",
-      "Name": "",
-      "AppName": "proj1-qa",
-      "ProcessName": "web"
-    }
-  ]
-}
-`
-
-const appInfo3 = `{
-  "cname": ["proj1.stage.example.com"],
-  "deploys": 35,
-  "description": "my nice project",
-  "ip": "proj1-stage.tsuru.example.com",
-  "lock": {
-    "Locked": false,
-    "Reason": "",
-    "Owner": "",
-    "AcquireDate": "0001-01-01T00:00:00Z"
-  },
-  "name": "proj1-stage",
-  "owner": "webmaster@example.com",
-  "plan": {
-    "name": "medium",
-    "memory": 536870912,
-    "swap": 1073741824,
-    "cpushare": 1024,
-    "default": true,
-    "router": "hipache"
-  },
-  "platform": "python",
-  "pool": "mypool",
-  "repository": "git@example.com:proj1-stage.git",
-  "teamowner": "admin",
-  "teams": [
-    "admin",
-    "sysop"
-  ],
-  "units": [
-    {
-      "ID": "71281212acdf482318129",
-      "Name": "",
-      "AppName": "proj1-stage",
-      "ProcessName": "web"
-    },
-    {
-      "ID": "d7085b38e43dc1699b745dbe5a3a725c776dab37eb648c3c77a7aa20eb49d382f",
-      "Name": "",
-      "AppName": "proj1-stage",
-      "ProcessName": "web"
-    }
-  ]
-}
-`
-
-const appInfo4 = `{
   "cname": ["proj1.example.com"],
   "deploys": 35,
   "description": "my nice project",
@@ -387,7 +255,7 @@ const appInfo4 = `{
 }
 `
 
-const appInfo5 = `{
+const appInfo2 = `{
   "cname": ["proj3.dev.example.com"],
   "deploys": 35,
   "description": "my nice project",
@@ -427,7 +295,7 @@ const appInfo5 = `{
 }
 `
 
-const appInfo6 = `{
+const appInfo3 = `{
   "cname": ["proj3.example.com"],
   "deploys": 35,
   "description": "my nice project",

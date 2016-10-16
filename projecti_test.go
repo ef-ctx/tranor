@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/tsuru/tsuru/cmd"
@@ -573,6 +574,88 @@ func TestProjectRemoveNotFound(t *testing.T) {
 	expectedMessage := "project not found"
 	if err.Error() != expectedMessage {
 		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMessage, err.Error())
+	}
+}
+
+func TestProjectInfo(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	config, _ := loadConfigFile()
+	appMaps, err := createApps(config.Environments, client, "proj1", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = setCNames(appMaps, client, "proj1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, _ := getApp(client, "proj1-dev")
+	table := cmd.Table{Headers: cmd.Row([]string{"Environment", "Address", "Image", "Git hash/tag", "Deploy date", "Units"})}
+	expectedOutput := fmt.Sprintf(`Project name: proj1
+Description: my nice project
+Repository: git@gandalf.example.com:proj1-dev.git
+Platform: python
+Teams: %s
+Owner: %s
+Team owner: myteam`+"\n\n", strings.Join(a.Teams, ", "), a.Owner)
+	rows := []cmd.Row{
+		{"dev", "proj1.dev.example.com", "", "", "", "0"},
+		{"qa", "proj1.qa.example.com", "", "", "", "0"},
+		{"stage", "proj1.stage.example.com", "", "", "", "0"},
+		{"prod", "proj1.example.com", "", "", "", "0"},
+	}
+	for _, row := range rows {
+		table.AddRow(row)
+	}
+	expectedOutput += table.String()
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
+func TestProjectInfoNotFound(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeTarget(tsuruServer.url())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectInfo
+	err = c.Flags().Parse(true, []string{"-n", "proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal(err)
+	}
+	expectedMsg := "project not found"
+	if err.Error() != expectedMsg {
+		t.Errorf("wrong error message\nwant %q\ngot  %q", expectedMsg, err.Error())
 	}
 }
 

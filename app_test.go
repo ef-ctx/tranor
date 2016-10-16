@@ -417,7 +417,7 @@ func TestGetApp(t *testing.T) {
 		method:  "GET",
 		path:    "/apps/proj3-prod",
 		code:    http.StatusOK,
-		payload: []byte(appInfo6),
+		payload: []byte(appInfo3),
 	})
 	cleanup, err := setupFakeTarget(fakeServer.url())
 	if err != nil {
@@ -432,7 +432,7 @@ func TestGetApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	var expectedApp app
-	err = json.Unmarshal([]byte(appInfo6), &expectedApp)
+	err = json.Unmarshal([]byte(appInfo3), &expectedApp)
 	if err != nil {
 		t.Fatal(err)
 	}

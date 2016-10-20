@@ -18,6 +18,7 @@ import (
 
 	"github.com/tsuru/gnuflag"
 	"github.com/tsuru/tsuru-client/tsuru/client"
+	"github.com/tsuru/tsuru/api"
 	"github.com/tsuru/tsuru/cmd"
 	tsuruerrors "github.com/tsuru/tsuru/errors"
 )
@@ -514,6 +515,14 @@ func createApps(envs []Environment, client *cmd.Client, projectName string, opts
 		}
 		a["name"] = opts.Name
 		a["dnsSuffix"] = env.DNSSuffix
+		setEnvVars(client, opts.Name, &api.Envs{
+			Envs: []struct {
+				Name  string
+				Value string
+			}{
+				{Name: "TRANOR_ENV_NAME", Value: env.Name},
+			},
+		})
 		createdApps = append(createdApps, a)
 		apps = append(apps, app{Name: opts.Name})
 	}

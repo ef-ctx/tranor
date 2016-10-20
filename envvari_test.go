@@ -200,6 +200,7 @@ func TestProjectEnvVarGet(t *testing.T) {
 	}
 	expectedOutput := `variables in "dev":
 
+ TRANOR_ENV_NAME=dev
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -207,6 +208,7 @@ func TestProjectEnvVarGet(t *testing.T) {
 
 variables in "stage":
 
+ TRANOR_ENV_NAME=stage
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -214,6 +216,7 @@ variables in "stage":
 
 variables in "prod":
 
+ TRANOR_ENV_NAME=prod
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -256,6 +259,7 @@ func TestProjectEnvVarGetDefaultEnvs(t *testing.T) {
 	}
 	expectedOutput := `variables in "dev":
 
+ TRANOR_ENV_NAME=dev
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -263,6 +267,7 @@ func TestProjectEnvVarGetDefaultEnvs(t *testing.T) {
 
 variables in "qa":
 
+ TRANOR_ENV_NAME=qa
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -270,6 +275,7 @@ variables in "qa":
 
 variables in "stage":
 
+ TRANOR_ENV_NAME=stage
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -277,6 +283,7 @@ variables in "stage":
 
 variables in "prod":
 
+ TRANOR_ENV_NAME=prod
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -324,6 +331,7 @@ func TestProjectEnvVarGetAppNotFound(t *testing.T) {
 	}
 	expectedOutput := `variables in "dev":
 
+ TRANOR_ENV_NAME=dev
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)
@@ -331,6 +339,7 @@ func TestProjectEnvVarGetAppNotFound(t *testing.T) {
 
 variables in "prod":
 
+ TRANOR_ENV_NAME=prod
  TSURU_APPDIR=*** (private variable)
  TSURU_APPNAME=*** (private variable)
  TSURU_APP_TOKEN=*** (private variable)

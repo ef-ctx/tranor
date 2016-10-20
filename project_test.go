@@ -282,9 +282,10 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
-	expectedMethods := []string{"POST", "POST", "POST", "POST", "DELETE", "DELETE"}
+	expectedMethods := []string{"POST", "POST", "POST", "POST", "POST", "POST", "DELETE", "DELETE"}
 	expectedPaths := []string{
-		"/1.0/apps", "/1.0/apps",
+		"/1.0/apps", "/1.0/apps/superproj-dev/env",
+		"/1.0/apps", "/1.0/apps/superproj-prod/env",
 		"/1.0/apps/superproj-dev/cname",
 		"/1.0/apps/superproj-prod/cname",
 		"/1.0/apps/superproj-dev",

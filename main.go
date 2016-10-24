@@ -37,6 +37,8 @@ func buildManager(name string) *cmd.Manager {
 	mngr.Register(&projectEnvVarGet{})
 	mngr.Register(&projectEnvVarSet{})
 	mngr.Register(&projectEnvVarUnset{})
+	mngr.Register(&projectDeploy{})
+	mngr.Register(&projectDeployList{})
 	return mngr
 }
 

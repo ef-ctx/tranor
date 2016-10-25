@@ -5,6 +5,8 @@
 package main
 
 import (
+	"net/http"
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -13,108 +15,109 @@ import (
 	"github.com/tsuru/tsuru/cmd"
 )
 
-func TestProjectDeployFlags(t *testing.T) {
-	oldCommand := tsuruDeployCommand
-	defer func() { tsuruDeployCommand = oldCommand }()
-	var tests = []struct {
-		testCase      string
-		flags         []string
-		args          []string
-		expectedFlags map[string]string
-		expectedArgs  []string
-	}{
-		{
-			"upload-based deploy",
-			[]string{"-n", "myproj", "-e", "dev"},
-			[]string{"."},
-			map[string]string{
-				"app": "myproj-dev",
-				"a":   "myproj-dev",
-			},
-			[]string{"."},
-		},
-		{
-			"image-based deploy",
-			[]string{"-n", "myproj", "-e", "dev", "-i", "some/image"},
-			nil,
-			map[string]string{
-				"a":     "myproj-dev",
-				"app":   "myproj-dev",
-				"i":     "some/image",
-				"image": "some/image",
-			},
-			nil,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.testCase, func(t *testing.T) {
-			fakeCommand := fakeTsuruCommand{FlaggedCommand: &client.AppDeploy{}}
-			tsuruDeployCommand = &fakeCommand
-			var c projectDeploy
-			ctx := cmd.Context{Args: test.args}
-			c.Flags().Parse(true, test.flags)
-			err := c.Run(&ctx, nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if gotFlags := fakeCommand.inputFlags(); !reflect.DeepEqual(gotFlags, test.expectedFlags) {
-				t.Errorf("wrong flags sent to app-deploy\ngot  %#v\nwant %#v", gotFlags, test.expectedFlags)
-			}
+func TestProjectDeployPromoteFlags(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj1"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	envNames := []string{"dev", "qa", "stage", "prod"}
+	for _, envName := range envNames {
+		fakeServer.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/proj1-" + envName,
+			code:    http.StatusOK,
+			payload: []byte(appInfo1),
 		})
+	}
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps/proj1-dev",
+		code:    http.StatusOK,
+		payload: []byte(appInfo1),
+	})
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/deploys?limit=1&app=proj1-dev",
+		code:    http.StatusOK,
+		payload: []byte(deployments),
+	})
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldCommand := tsuruDeployCommand
+	fakeCommand := fakeTsuruCommand{FlaggedCommand: &client.AppDeploy{}}
+	tsuruDeployCommand = &fakeCommand
+	defer func() {
+		tsuruDeployCommand = oldCommand
+		cleanup()
+	}()
+	var c projectDeploy
+	ctx := cmd.Context{}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	c.Flags().Parse(true, []string{"-n", "proj1", "-e", "stg", "-p", "dev"})
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	flags := fakeCommand.inputFlags()
+	expectedFlags := map[string]string{
+		"a":     "proj1-stg",
+		"app":   "proj1-stg",
+		"i":     "docker-registry.example.com/tsuru/app-proj1-dev:v938",
+		"image": "docker-registry.example.com/tsuru/app-proj1-dev:v938",
+	}
+	if !reflect.DeepEqual(flags, expectedFlags) {
+		t.Errorf("wrong flags used\nwant %#v\ngot  %#v", expectedFlags, flags)
 	}
 }
 
-func TestProjectDeployErrors(t *testing.T) {
-	var tests = []struct {
-		testCase string
-		flags    []string
-		args     []string
-		errMsg   string
-	}{
-		{
-			"missing project name",
-			nil,
-			nil,
-			"please provide the project name and the environment",
-		},
-		{
-			"missing env name",
-			[]string{"-n", "myproj"},
-			nil,
-			"please provide the project name and the environment",
-		},
-		{
-			"missing deploy options",
-			[]string{"-n", "myproj", "-e", "dev"},
-			nil,
-			"please specify either the image, version or the list of files/directories to upload",
-		},
-		{
-			"specifying all options",
-			[]string{"-n", "myproj", "-e", "dev", "-i", "someimage", "-v", "someversion"},
-			[]string{"."},
-			"please specify only one of the image, version or the list of files/directories to upload",
-		},
-		{
-			"specifying image and version",
-			[]string{"-n", "myproj", "-e", "dev", "-i", "someimage", "-v", "someversion"},
-			nil,
-			"please specify only one of the image, version or the list of files/directories to upload",
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.testCase, func(t *testing.T) {
-			var c projectDeploy
-			ctx := cmd.Context{Args: test.args}
-			c.Flags().Parse(true, test.flags)
-			err := c.Run(&ctx, nil)
-			if err == nil {
-				t.Fatal("unexpected <nil> error")
-			}
-			if err.Error() != test.errMsg {
-				t.Errorf("wrong error message\ngot  %q\nwant %q", err.Error(), test.errMsg)
-			}
+func TestProjectDeployPromoteFailToGetLastDeploy(t *testing.T) {
+	fakeServer := newFakeServer(t)
+	defer fakeServer.stop()
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps?name=" + url.QueryEscape("^proj1"),
+		code:    http.StatusOK,
+		payload: []byte(listOfApps),
+	})
+	envNames := []string{"dev", "qa", "stage", "prod"}
+	for _, envName := range envNames {
+		fakeServer.prepareResponse(preparedResponse{
+			method:  "GET",
+			path:    "/apps/proj1-" + envName,
+			code:    http.StatusOK,
+			payload: []byte(appInfo1),
 		})
+	}
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/apps/proj1-dev",
+		code:    http.StatusOK,
+		payload: []byte(appInfo1),
+	})
+	fakeServer.prepareResponse(preparedResponse{
+		method:  "GET",
+		path:    "/deploys?limit=1&app=proj1-dev",
+		code:    http.StatusInternalServerError,
+		payload: []byte("something went wrong"),
+	})
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var c projectDeploy
+	ctx := cmd.Context{}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	c.Flags().Parse(true, []string{"-n", "proj1", "-e", "stg", "-p", "dev"})
+	err = c.Run(&ctx, client)
+	if err == nil {
+		t.Fatal("unexpected <nil> error")
 	}
 }
 

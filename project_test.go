@@ -922,7 +922,8 @@ func setupFakeConfig(target, token string) (func(), error) {
 	os.Unsetenv("TSURU_HOST")
 	os.Setenv("TSURU_TOKEN", token)
 	config := Config{
-		Target: target,
+		Target:   target,
+		Registry: "docker-registry.example.com",
 		Environments: []Environment{
 			{
 				Name:      "dev",

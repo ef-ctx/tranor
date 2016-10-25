@@ -33,7 +33,7 @@ func TestTargetSetRun(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/config.json":
-			w.Write([]byte(`{"target":"mytarget","envs":[]}`))
+			w.Write([]byte(`{"target":"mytarget","registry":"localhost:3030","envs":[]}`))
 		default:
 			http.Error(w, "not found", http.StatusNotFound)
 		}
@@ -58,7 +58,7 @@ func TestTargetSetRun(t *testing.T) {
 	expectedMsg := "Target successfully defined!\n"
 	expectedTarget := "mytarget"
 	expectedTargets := "tranor\tmytarget\n"
-	expectedConfig := `{"target":"mytarget","envs":[]}` + "\n"
+	expectedConfig := `{"target":"mytarget","registry":"localhost:3030","envs":[]}` + "\n"
 	if stdout.String() != expectedMsg {
 		t.Errorf("wrong stdout msg.\nWant %q\nGot  %q", expectedMsg, stdout.String())
 	}
@@ -109,7 +109,7 @@ func TestTargetSetRunFailure(t *testing.T) {
 }
 
 func TestDownloadConfiguration(t *testing.T) {
-	config := `{"target":"http://mytarget.example.com","envs":[]}`
+	config := `{"target":"http://mytarget.example.com","registry":"localhost:5000","envs":[]}`
 	var req http.Request
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		req = *r

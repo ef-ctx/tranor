@@ -91,7 +91,8 @@ func TestLoadConfigFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedConfig := Config{
-		Target: "http://tsuru-api.example.com",
+		Target:   "http://tsuru-api.example.com",
+		Registry: "localhost:5000",
 		Environments: []Environment{
 			{Name: "dev", DNSSuffix: "dev.example.com"},
 			{Name: "qa", DNSSuffix: "qa.example.com"},
@@ -231,6 +232,33 @@ func TestConfigEnvNames(t *testing.T) {
 	gotNames := c.envNames()
 	if !reflect.DeepEqual(gotNames, expectedNames) {
 		t.Errorf("wrong env names returned\nwant %#v\ngot  %#v", expectedNames, gotNames)
+	}
+}
+
+func TestConfigImageApp(t *testing.T) {
+	var tests = []struct {
+		testCase      string
+		config        Config
+		expectedImage string
+	}{
+		{
+			"with registry",
+			Config{Registry: "localhost:4040"},
+			"localhost:4040/tsuru/app-myapp:v10",
+		},
+		{
+			"without registry",
+			Config{},
+			"tsuru/app-myapp:v10",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.testCase, func(t *testing.T) {
+			gotImage := test.config.imageApp("myapp", "v10")
+			if gotImage != test.expectedImage {
+				t.Errorf("wrong image returned\nwant %q\ngot  %q", test.expectedImage, gotImage)
+			}
+		})
 	}
 }
 

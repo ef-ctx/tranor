@@ -1,5 +1,6 @@
 {
 	"target": "http://tsuru-api.example.com",
+	"registry": "localhost:5000",
 	"envs": [
 		{
 			"name": "dev",

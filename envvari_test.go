@@ -378,6 +378,9 @@ func TestProjectEnvVarUnset(t *testing.T) {
 		Team:        "myteam",
 		Platform:    "python",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	var c projectEnvVarUnset
 	err = c.Flags().Parse(true, []string{
 		"-n", "myproj",
@@ -422,6 +425,9 @@ func TestProjectEnvVarUnsetDefaultEnvs(t *testing.T) {
 		Team:        "myteam",
 		Platform:    "python",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.Flags().Parse(true, []string{
 		"-n", "myproj",
 		"--no-restart",

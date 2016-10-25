@@ -561,9 +561,6 @@ func projectApps(client *cmd.Client, name string) ([]app, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(apps) == 0 {
-		return nil, errors.New("project not found")
-	}
 	var projectApps []app
 	for _, env := range config.Environments {
 		for _, app := range apps {
@@ -584,6 +581,9 @@ func projectApps(client *cmd.Client, name string) ([]app, error) {
 				projectApps = append(projectApps, app)
 			}
 		}
+	}
+	if len(projectApps) == 0 {
+		return nil, errors.New("project not found")
 	}
 	return projectApps, nil
 }

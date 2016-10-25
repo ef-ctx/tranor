@@ -118,7 +118,7 @@ func TestProjectDeployErrors(t *testing.T) {
 			"invalid direct deploy",
 			[]string{"-n", "myproj", "-e", "stage"},
 			[]string{"target/debug"},
-			`can only deploy directly to "dev", use promote to deploy to other environments`,
+			`can only deploy directly to "dev", use -p/--promote to deploy to other environments`,
 		},
 		{
 			"promote from environment that hasn't been deployed",

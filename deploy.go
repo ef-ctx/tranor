@@ -76,7 +76,7 @@ func (c *projectDeploy) Run(ctx *cmd.Context, cli *cmd.Client) error {
 	}
 
 	if checkEnv && apps[0].Env.Name != c.envName {
-		return fmt.Errorf("can only deploy directly to %q, use promote to deploy to other environments", apps[0].Env.Name)
+		return fmt.Errorf("can only deploy directly to %q, use -p/--promote to deploy to other environments", apps[0].Env.Name)
 	}
 	tsuruDeployCommand.Flags().Parse(true, flags)
 	return tsuruDeployCommand.Run(ctx, cli)

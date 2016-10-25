@@ -17,13 +17,15 @@ commands below should get tranor up and running:
 % tranor target-set <remote-tranor-config-server>
 ```
 
-The config server is an HTTP endpoint that contains the Tsuru target server and
-the list of environment names and DNS suffixes, in the following format:
+The config server is an HTTP endpoint that contains the Tsuru target server,
+the Docker registry used by the tsuru setup and the list of environment names
+and DNS suffixes, in the following format:
 
 
 ```json
 {
 	"target": "http://tsuru.example.com",
+	"registry": "docker-registry.example.com",
 	"envs": [
 		{
 			"name": "dev",

@@ -24,7 +24,7 @@ func TestCreateApp(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps",
 		code:    http.StatusOK,
 		payload: []byte(`{"repository_url":"git@example.com:app.git"}`),
@@ -53,7 +53,7 @@ func TestCreateApp(t *testing.T) {
 		t.Errorf("wrong app map returned\nwant %#v\ngot  %#v", expectedApp, app)
 	}
 	req := fakeServer.reqs[0]
-	if req.Method != "POST" {
+	if req.Method != http.MethodPost {
 		t.Errorf("wrong method. Want POST. Got %s", req.Method)
 	}
 	if req.URL.Path != "/1.0/apps" {
@@ -96,7 +96,7 @@ func TestUpdateApp(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "PUT",
+		method:  http.MethodPut,
 		path:    "/apps/myapp",
 		code:    http.StatusOK,
 		payload: []byte(`{"repository_url":"git@example.com:app.git"}`),
@@ -141,7 +141,7 @@ func TestUpdateAppNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "PUT",
+		method:  http.MethodPut,
 		path:    "/apps/myapp",
 		code:    http.StatusNotFound,
 		payload: []byte("app not found"),
@@ -184,12 +184,12 @@ func TestDeleteApps(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "DELETE",
+		method: http.MethodDelete,
 		path:   "/apps/proj1-dev",
 		code:   http.StatusOK,
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method: "DELETE",
+		method: http.MethodDelete,
 		path:   "/apps/proj1-prod",
 		code:   http.StatusOK,
 	})
@@ -215,7 +215,7 @@ func TestDeleteApps(t *testing.T) {
 	}
 	paths := []string{"/1.0/apps/proj1-dev", "/1.0/apps/proj1-qa", "/1.0/apps/proj1-prod"}
 	for i, req := range fakeServer.reqs {
-		if req.Method != "DELETE" {
+		if req.Method != http.MethodDelete {
 			t.Errorf("wrong method. Want DELETE. Got %s", req.Method)
 		}
 		if req.URL.Path != paths[i] {
@@ -251,13 +251,13 @@ func TestListApps(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?",
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps",
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -298,12 +298,12 @@ func TestListAppsEmpty(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/apps?",
 		code:   http.StatusNoContent,
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/apps",
 		code:   http.StatusNoContent,
 	})
@@ -344,7 +344,7 @@ func TestLastDeploy(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/deploys?limit=1&app=myapp",
 		code:    http.StatusOK,
 		payload: []byte(deployments),
@@ -376,7 +376,7 @@ func TestLastDeployEmpty(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/deploys?limit=1&app=myapp",
 		code:   http.StatusNoContent,
 	})
@@ -414,7 +414,7 @@ func TestGetApp(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps/proj3-prod",
 		code:    http.StatusOK,
 		payload: []byte(appInfo2),
@@ -445,7 +445,7 @@ func TestGetAppNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/apps/proj1-prod",
 		code:   http.StatusNotFound,
 	})
@@ -484,7 +484,7 @@ func TestSetEnvVars(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		code:    http.StatusOK,
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps/proj1-prod/env",
 		payload: []byte("{}"),
 	})
@@ -566,7 +566,7 @@ func TestGetEnvVars(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		code:    http.StatusOK,
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps/proj1-prod/env",
 		payload: []byte(`[{"name":"USER_NAME","value":"root","public":true},{"name":"USER_PASSWORD","value":"r00t","public":false}]`),
 	})
@@ -643,7 +643,7 @@ func TestUnsetEnvVars(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		code:     http.StatusOK,
-		method:   "DELETE",
+		method:   http.MethodDelete,
 		path:     "/apps/proj1-prod/env",
 		payload:  []byte("{}"),
 		ignoreQS: true,

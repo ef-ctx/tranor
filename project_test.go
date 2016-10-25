@@ -95,7 +95,7 @@ func TestProjectCreateNoRepo(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps",
 		code:    http.StatusCreated,
 		payload: []byte(`{}`),
@@ -103,7 +103,7 @@ func TestProjectCreateNoRepo(t *testing.T) {
 	appNames := []string{"superproj-dev", "superproj-prod"}
 	for _, appName := range appNames {
 		server.prepareResponse(preparedResponse{
-			method:  "POST",
+			method:  http.MethodPost,
 			path:    "/apps/" + appName + "/cname",
 			code:    http.StatusOK,
 			payload: []byte(`{}`),
@@ -238,24 +238,24 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps",
 		code:    http.StatusCreated,
 		payload: []byte(`{"repository_url":"git@git.example.com:superproj-dev.git"}`),
 	})
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps/superproj-dev/cname",
 		code:    http.StatusOK,
 		payload: []byte(`{}`),
 	})
 	server.prepareResponse(preparedResponse{
-		method: "DELETE",
+		method: http.MethodDelete,
 		path:   "/apps/superproj-prod",
 		code:   http.StatusOK,
 	})
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps/superproj-prod/cname",
 		code:    http.StatusInternalServerError,
 		payload: []byte(`{}`),
@@ -282,7 +282,7 @@ func TestProjectCreateFailToSetCNames(t *testing.T) {
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
 	}
-	expectedMethods := []string{"POST", "POST", "POST", "POST", "POST", "POST", "DELETE", "DELETE"}
+	expectedMethods := []string{http.MethodPost, "POST", "POST", "POST", "POST", "POST", http.MethodDelete, "DELETE"}
 	expectedPaths := []string{
 		"/1.0/apps", "/1.0/apps/superproj-dev/env",
 		"/1.0/apps", "/1.0/apps/superproj-prod/env",
@@ -330,7 +330,7 @@ func TestProjectUpdateNotFound(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/apps?name=" + url.QueryEscape("^proj3"),
 		code:   http.StatusNoContent,
 	})
@@ -368,7 +368,7 @@ func TestProjectUpdateFailToCreateNewApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj3"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -379,14 +379,14 @@ func TestProjectUpdateFailToCreateNewApps(t *testing.T) {
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/" + appName,
 			code:    http.StatusOK,
 			payload: payload,
 		})
 	}
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps",
 		code:    http.StatusInternalServerError,
 		payload: []byte(`{}`),
@@ -421,7 +421,7 @@ func TestProjectUpdateFailToSetCNames(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj3"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -432,25 +432,25 @@ func TestProjectUpdateFailToSetCNames(t *testing.T) {
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/" + appName,
 			code:    http.StatusOK,
 			payload: payload,
 		})
 	}
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps",
 		code:    http.StatusCreated,
 		payload: []byte(`{}`),
 	})
 	server.prepareResponse(preparedResponse{
-		method: "POST",
+		method: http.MethodPost,
 		path:   "/apps/proj3-qa/cname",
 		code:   http.StatusOK,
 	})
 	server.prepareResponse(preparedResponse{
-		method: "POST",
+		method: http.MethodPost,
 		path:   "/apps/proj3-stage/cname",
 		code:   http.StatusInternalServerError,
 	})
@@ -484,7 +484,7 @@ func TestProjectUpdateFailToUpdate(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj3"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -495,35 +495,35 @@ func TestProjectUpdateFailToUpdate(t *testing.T) {
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/" + appName,
 			code:    http.StatusOK,
 			payload: payload,
 		})
 	}
 	server.prepareResponse(preparedResponse{
-		method: "DELETE",
+		method: http.MethodDelete,
 		path:   "/apps/proj3-dev",
 		code:   http.StatusOK,
 	})
 	server.prepareResponse(preparedResponse{
-		method: "PUT",
+		method: http.MethodPut,
 		path:   "/apps/proj3-prod",
 		code:   http.StatusInternalServerError,
 	})
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps",
 		code:    http.StatusCreated,
 		payload: []byte(`{}`),
 	})
 	server.prepareResponse(preparedResponse{
-		method: "POST",
+		method: http.MethodPost,
 		path:   "/apps/proj3-qa/cname",
 		code:   http.StatusOK,
 	})
 	server.prepareResponse(preparedResponse{
-		method: "POST",
+		method: http.MethodPost,
 		path:   "/apps/proj3-stage/cname",
 		code:   http.StatusOK,
 	})
@@ -557,7 +557,7 @@ func TestProjectUpdateInvalidNewEnv(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj3"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -568,7 +568,7 @@ func TestProjectUpdateInvalidNewEnv(t *testing.T) {
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/" + appName,
 			code:    http.StatusOK,
 			payload: payload,
@@ -601,7 +601,7 @@ func TestProjectUpdateDuplicateEnv(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj3"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -612,7 +612,7 @@ func TestProjectUpdateDuplicateEnv(t *testing.T) {
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/" + appName,
 			code:    http.StatusOK,
 			payload: payload,
@@ -649,7 +649,7 @@ func TestProjectUpdateInvalidRemoveEnvs(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj3"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -660,7 +660,7 @@ func TestProjectUpdateInvalidRemoveEnvs(t *testing.T) {
 	}
 	for appName, payload := range appRespMap {
 		server.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/" + appName,
 			code:    http.StatusOK,
 			payload: payload,
@@ -780,7 +780,7 @@ func TestProjectInfoErrorToListApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=proj1",
 		code:    http.StatusInternalServerError,
 		payload: []byte("something went wrong"),
@@ -877,7 +877,7 @@ func TestProjectListErrorToListApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps",
 		code:    http.StatusInternalServerError,
 		payload: []byte("something went wrong"),

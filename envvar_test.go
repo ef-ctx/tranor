@@ -97,7 +97,7 @@ func TestProjectEnvVarSetErrorInOneOfTheApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps/proj1-stage/env",
 		code:    http.StatusInternalServerError,
 		payload: []byte("something went wrong"),
@@ -105,7 +105,7 @@ func TestProjectEnvVarSetErrorInOneOfTheApps(t *testing.T) {
 	appNames := []string{"proj1-dev", "proj1-prod"}
 	for _, appName := range appNames {
 		server.prepareResponse(preparedResponse{
-			method:  "POST",
+			method:  http.MethodPost,
 			path:    "/apps/" + appName + "/env",
 			code:    http.StatusOK,
 			payload: []byte("{}"),
@@ -199,7 +199,7 @@ func TestProjectEnvVarGetErrorInOneOfTheApps(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps/proj1-stage/env",
 		code:    http.StatusInternalServerError,
 		payload: []byte("something went wrong"),
@@ -225,7 +225,7 @@ func TestProjectEnvVarGetErrorInOneOfTheApps(t *testing.T) {
 		}
 		payload, _ := json.Marshal(rawPayload)
 		server.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/" + appName + "/env",
 			code:    http.StatusOK,
 			payload: payload,
@@ -320,7 +320,7 @@ func TestProjectEnvVarUnsetError(t *testing.T) {
 	server := newFakeServer(t)
 	defer server.stop()
 	server.prepareResponse(preparedResponse{
-		method:   "DELETE",
+		method:   http.MethodDelete,
 		path:     "/apps/proj1-stage/env",
 		code:     http.StatusInternalServerError,
 		payload:  []byte("something went wrong"),
@@ -329,7 +329,7 @@ func TestProjectEnvVarUnsetError(t *testing.T) {
 	appNames := []string{"proj1-dev", "proj1-prod"}
 	for _, appName := range appNames {
 		server.prepareResponse(preparedResponse{
-			method:   "DELETE",
+			method:   http.MethodDelete,
 			path:     "/apps/" + appName + "/env",
 			code:     http.StatusOK,
 			payload:  []byte("{}"),

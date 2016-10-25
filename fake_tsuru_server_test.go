@@ -40,9 +40,9 @@ func (s *fakeTsuruServer) buildRouter() {
 	r := s.router.PathPrefix("/1.0").Subrouter()
 	r.HandleFunc("/apps", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			s.createApp(w, r)
-		case "GET":
+		case http.MethodGet:
 			s.listApps(w, r)
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -50,11 +50,11 @@ func (s *fakeTsuruServer) buildRouter() {
 	})
 	r.HandleFunc("/apps/{appname}", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "PUT":
+		case http.MethodPut:
 			s.updateApp(w, r)
-		case "GET":
+		case http.MethodGet:
 			s.getApp(w, r)
-		case "DELETE":
+		case http.MethodDelete:
 			s.deleteApp(w, r)
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -62,11 +62,11 @@ func (s *fakeTsuruServer) buildRouter() {
 	})
 	r.HandleFunc("/apps/{appname}/env", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			s.setEnvs(w, r)
-		case "GET":
+		case http.MethodGet:
 			s.getEnvs(w, r)
-		case "DELETE":
+		case http.MethodDelete:
 			s.unsetEnvs(w, r)
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

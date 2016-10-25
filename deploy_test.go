@@ -19,7 +19,7 @@ func TestProjectDeployPromoteFlags(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj1"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -27,20 +27,20 @@ func TestProjectDeployPromoteFlags(t *testing.T) {
 	envNames := []string{"dev", "qa", "stage", "prod"}
 	for _, envName := range envNames {
 		fakeServer.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/proj1-" + envName,
 			code:    http.StatusOK,
 			payload: []byte(appInfo1),
 		})
 	}
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps/proj1-dev",
 		code:    http.StatusOK,
 		payload: []byte(appInfo1),
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/deploys?limit=1&app=proj1-dev",
 		code:    http.StatusOK,
 		payload: []byte(deployments),
@@ -80,7 +80,7 @@ func TestProjectDeployPromoteFailToGetLastDeploy(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?name=" + url.QueryEscape("^proj1"),
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
@@ -88,20 +88,20 @@ func TestProjectDeployPromoteFailToGetLastDeploy(t *testing.T) {
 	envNames := []string{"dev", "qa", "stage", "prod"}
 	for _, envName := range envNames {
 		fakeServer.prepareResponse(preparedResponse{
-			method:  "GET",
+			method:  http.MethodGet,
 			path:    "/apps/proj1-" + envName,
 			code:    http.StatusOK,
 			payload: []byte(appInfo1),
 		})
 	}
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps/proj1-dev",
 		code:    http.StatusOK,
 		payload: []byte(appInfo1),
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/deploys?limit=1&app=proj1-dev",
 		code:    http.StatusInternalServerError,
 		payload: []byte("something went wrong"),

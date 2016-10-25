@@ -538,7 +538,7 @@ func setCNames(apps []map[string]string, client *cmd.Client, projectName string)
 		cname := fmt.Sprintf("%s.%s", projectName, app["dnsSuffix"])
 		v := make(url.Values)
 		v.Set("cname", cname)
-		req, err := http.NewRequest("POST", reqURL, strings.NewReader(v.Encode()))
+		req, err := http.NewRequest(http.MethodPost, reqURL, strings.NewReader(v.Encode()))
 		if err != nil {
 			return err
 		}

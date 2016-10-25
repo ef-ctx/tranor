@@ -134,8 +134,8 @@ func TestDownloadConfiguration(t *testing.T) {
 	if string(content) != config {
 		t.Errorf("wrong config written. Want %q. Got %q", config, string(content))
 	}
-	if req.Method != "GET" {
-		t.Errorf("wrong method in request. Want %q. Got %q", "GET", req.Method)
+	if req.Method != http.MethodGet {
+		t.Errorf("wrong method in request. Want %q. Got %q", http.MethodGet, req.Method)
 	}
 	if req.URL.Path != "/config.json" {
 		t.Errorf("wrong path in request. Want %q. Got %q", "/config.json", req.URL.Path)

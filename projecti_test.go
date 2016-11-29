@@ -762,6 +762,9 @@ func TestProjectList(t *testing.T) {
 			Team:        "myteam",
 			Platform:    "python",
 		})
+		if innerErr != nil {
+			t.Fatal(innerErr)
+		}
 		innerErr = setCNames(appMaps, client, projName)
 		if innerErr != nil {
 			t.Fatal(innerErr)
@@ -776,6 +779,9 @@ func TestProjectList(t *testing.T) {
 		Team:        "myteam",
 		Platform:    "python",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = setCNames(appMaps, client, "myproj3")
 	if err != nil {
 		t.Fatal(err)

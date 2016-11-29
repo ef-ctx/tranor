@@ -18,6 +18,7 @@ import (
 
 	"github.com/tsuru/gnuflag"
 	"github.com/tsuru/tsuru-client/tsuru/client"
+	"github.com/tsuru/tsuru/api"
 	"github.com/tsuru/tsuru/cmd"
 	tsuruerrors "github.com/tsuru/tsuru/errors"
 )
@@ -514,6 +515,14 @@ func createApps(envs []Environment, client *cmd.Client, projectName string, opts
 		}
 		a["name"] = opts.Name
 		a["dnsSuffix"] = env.DNSSuffix
+		setEnvVars(client, opts.Name, &api.Envs{
+			Envs: []struct {
+				Name  string
+				Value string
+			}{
+				{Name: "TRANOR_ENV_NAME", Value: env.Name},
+			},
+		})
 		createdApps = append(createdApps, a)
 		apps = append(apps, app{Name: opts.Name})
 	}
@@ -529,7 +538,7 @@ func setCNames(apps []map[string]string, client *cmd.Client, projectName string)
 		cname := fmt.Sprintf("%s.%s", projectName, app["dnsSuffix"])
 		v := make(url.Values)
 		v.Set("cname", cname)
-		req, err := http.NewRequest("POST", reqURL, strings.NewReader(v.Encode()))
+		req, err := http.NewRequest(http.MethodPost, reqURL, strings.NewReader(v.Encode()))
 		if err != nil {
 			return err
 		}
@@ -552,9 +561,6 @@ func projectApps(client *cmd.Client, name string) ([]app, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(apps) == 0 {
-		return nil, errors.New("project not found")
-	}
 	var projectApps []app
 	for _, env := range config.Environments {
 		for _, app := range apps {
@@ -575,6 +581,9 @@ func projectApps(client *cmd.Client, name string) ([]app, error) {
 				projectApps = append(projectApps, app)
 			}
 		}
+	}
+	if len(projectApps) == 0 {
+		return nil, errors.New("project not found")
 	}
 	return projectApps, nil
 }

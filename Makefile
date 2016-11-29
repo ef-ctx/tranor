@@ -34,4 +34,4 @@ prepare-test-server:
 	TSURU_TARGET="$${TSURU_TEST_HOST}" TSURU_TOKEN="$${TSURU_TEST_TOKEN}" tsuru-admin plan-create -c 512 huge || true
 	TSURU_TARGET="$${TSURU_TEST_HOST}" TSURU_TOKEN="$${TSURU_TEST_TOKEN}" tsuru team-create myteam || true
 	TSURU_TARGET="$${TSURU_TEST_HOST}" TSURU_TOKEN="$${TSURU_TEST_TOKEN}" tsuru team-create superteam || true
-	TSURU_TARGET="$${TSURU_TEST_HOST}" TSURU_TOKEN="$${TSURU_TEST_TOKEN}" tsuru-admin user-quota-change $$(tsuru user-info | grep Email: | awk '{print $$2}') -- -1
+	TSURU_TARGET="$${TSURU_TEST_HOST}" TSURU_TOKEN="$${TSURU_TEST_TOKEN}" tsuru-admin user-quota-change $$(tsuru user-info | grep Email: | awk '{print $$2}') unlimited

@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/tsuru/tsuru/cmd"
 )
@@ -43,6 +44,7 @@ func (envList) Run(ctx *cmd.Context, _ *cmd.Client) error {
 // Config represents the configuration for the tranor command line.
 type Config struct {
 	Target       string        `json:"target"`
+	Registry     string        `json:"registry"`
 	Environments []Environment `json:"envs"`
 }
 
@@ -52,6 +54,14 @@ func (c *Config) envNames() []string {
 		names[i] = env.Name
 	}
 	return names
+}
+
+func (c *Config) imageApp(appName, version string) string {
+	parts := []string{"tsuru", "app-" + appName + ":" + version}
+	if c.Registry != "" {
+		parts = []string{c.Registry, parts[0], parts[1]}
+	}
+	return strings.Join(parts, "/")
 }
 
 func (c *Config) writeTarget() error {

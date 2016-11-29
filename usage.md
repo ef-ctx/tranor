@@ -47,7 +47,7 @@ Use tranor help <topicname> to get more information about a topic.
 The command ``tranor target-set`` will define your remote tranor server:
 
 ```
-% tranor target-set https://gist.githubusercontent.com/fsouza/ac50e24d18bd7c24588164481fa3686b/raw/08d693a2da421dcf5a0ac0e02ba45c050d44fc57
+% tranor target-set https://gist.githubusercontent.com/fsouza/ac50e24d18bd7c24588164481fa3686b/raw/482b60f8ecff0cf77bcc2db8903dff5492910447
 Target successfully defined!
 ```
 
@@ -475,4 +475,235 @@ variables in "prod":
  DATABASE_NAME=mydb
  TSURU_APPNAME=*** (private variable)
  TSURU_APPDIR=*** (private variable)
+```
+
+## project-deploy
+
+The command ``tranor project-deploy`` is used to deploy a project. There are
+three ways of deploy a project using ``tranor project-deploy``:
+
+1. Uploading the contents
+1. Using a Docker image
+1. Promoting a version that is running in another environment
+
+For the first two options, the user can only deploy to the project "initial"
+environment. Environments follow a definition order, usually dev > qa > stage >
+prod. This mean that the default initial environment is dev, but if an
+application has only qa and prod, the initial environment is qa.
+
+If users want to deploy to another environment, they should use the
+``-p/--promote`` flag.
+
+Deploying to the initial environment (dev):
+
+```
+% tranor project-deploy -n myproj -e dev .
+Uploading files (0.01MB)... 100.00% Processing..... ok
+/home/application/current /
+Collecting Flask==0.10.1 (from -r /home/application/current/requirements.txt (line 1))
+  Downloading Flask-0.10.1.tar.gz (544kB)
+Collecting Werkzeug>=0.7 (from Flask==0.10.1->-r /home/application/current/requirements.txt (line 1))
+  Downloading Werkzeug-0.11.11-py2.py3-none-any.whl (306kB)
+Collecting Jinja2>=2.4 (from Flask==0.10.1->-r /home/application/current/requirements.txt (line 1))
+  Downloading Jinja2-2.8-py2.py3-none-any.whl (263kB)
+Collecting itsdangerous>=0.21 (from Flask==0.10.1->-r /home/application/current/requirements.txt (line 1))
+  Downloading itsdangerous-0.24.tar.gz (46kB)
+Collecting MarkupSafe (from Jinja2>=2.4->Flask==0.10.1->-r /home/application/current/requirements.txt (line 1))
+  Downloading MarkupSafe-0.23.tar.gz
+Installing collected packages: Werkzeug, MarkupSafe, Jinja2, itsdangerous, Flask
+  Running setup.py install for MarkupSafe: started
+    Running setup.py install for MarkupSafe: finished with status 'done'
+  Running setup.py install for itsdangerous: started
+    Running setup.py install for itsdangerous: finished with status 'done'
+  Running setup.py install for Flask: started
+    Running setup.py install for Flask: finished with status 'done'
+Successfully installed Flask-0.10.1 Jinja2-2.8 MarkupSafe-0.23 Werkzeug-0.11.11 itsdangerous-0.24
+/
+
+---- Building application image ----
+ ---> Sending image to repository (5.05MB)
+ ---> Cleaning up
+
+---- Starting 1 new unit [web: 1] ----
+ ---> Started unit ce122a515e [web]
+
+---- Binding and checking 1 new unit ----
+ ---> Bound and checked unit ce122a515e [web]
+
+---- Adding routes to new units ----
+ ---> Added route to unit ce122a515e [web]
+
+---- Setting router healthcheck (Path: /) ----
+
+OK
+```
+
+Deploying a Docker image to the initial environment:
+
+```
+% tranor project-deploy -n myproj -e dev -i tsuru/tsuru-dashboard
+Deploying image... ok
+---- Pulling image to tsuru ----
+Pulling repository docker.io/tsuru/tsuru-dashboard
+error in docker node "https://192.168.99.100:2376": Error: image tsuru/tsuru-dashboard:latest not found
+% tranor project-deploy -n myproj -e dev -i tsuru/dashboard
+Deploying image... ok
+---- Pulling image to tsuru ----
+latest: Pulling from tsuru/dashboard
+Digest: sha256:a2d1f38ed30fafd1b6452847e3b63842817265d87b26dd108665c93c2e7f0d9f
+Status: Image is up to date for tsuru/dashboard:latest
+---- Getting process from image ----
+  ---> Process web found with command: gunicorn --access-logfile - -b 0.0.0.0:$PORT -w 2 abyss.wsgi -k gevent
+---- Pushing image to tsuru ----
+The push refers to a repository [192.168.99.100:5000/tsuru/app-myproj-dev]
+4cb50f5c84bc: Preparing
+af4d412b051e: Preparing
+5ed19e57c425: Preparing
+22518baa7d14: Preparing
+40a3f7f78596: Preparing
+0eac9fd0bf03: Preparing
+02ab82d82f1b: Preparing
+e4c62e08842a: Preparing
+4c57ca702cb9: Preparing
+f2b7c55206b1: Preparing
+ddd02798417c: Preparing
+fcbecd85db47: Preparing
+6cb2a13b80d9: Preparing
+5f70bf18a086: Preparing
+45befd8a8901: Preparing
+0eac9fd0bf03: Waiting
+02ab82d82f1b: Waiting
+e4c62e08842a: Waiting
+4c57ca702cb9: Waiting
+f2b7c55206b1: Waiting
+ddd02798417c: Waiting
+fcbecd85db47: Waiting
+6cb2a13b80d9: Waiting
+5f70bf18a086: Waiting
+45befd8a8901: Waiting
+4cb50f5c84bc: Mounted from tsuru/app-tsuru-dashboard
+22518baa7d14: Mounted from tsuru/app-tsuru-dashboard
+af4d412b051e: Mounted from tsuru/app-tsuru-dashboard
+40a3f7f78596: Mounted from tsuru/app-tsuru-dashboard
+e4c62e08842a: Mounted from tsuru/app-tsuru-dashboard
+02ab82d82f1b: Mounted from tsuru/app-tsuru-dashboard
+5ed19e57c425: Mounted from tsuru/app-tsuru-dashboard
+f2b7c55206b1: Layer already exists
+6cb2a13b80d9: Layer already exists
+0eac9fd0bf03: Mounted from tsuru/app-tsuru-dashboard
+ddd02798417c: Layer already exists
+45befd8a8901: Layer already exists
+fcbecd85db47: Layer already exists
+4c57ca702cb9: Mounted from tsuru/app-tsuru-dashboard
+5f70bf18a086: Layer already exists
+v3: digest: sha256:a2d1f38ed30fafd1b6452847e3b63842817265d87b26dd108665c93c2e7f0d9f size: 3462
+
+---- Starting 1 new unit [web: 1] ----
+ ---> Started unit 6ffcd7272d [web]
+
+---- Binding and checking 1 new unit ----
+ ---> Bound and checked unit 6ffcd7272d [web]
+
+---- Adding routes to new units ----
+ ---> Added route to unit 6ffcd7272d [web]
+
+---- Setting router healthcheck (Path: /) ----
+
+---- Removing routes from old units ----
+ ---> Removed route from unit ce122a515e [web]
+
+---- Removing 1 old unit ----
+ ---> Removed old unit ce122a515e [web]
+
+---- Unbinding 1 old unit ----
+ ---> Removed bind for old unit ce122a515e [web]
+
+OK
+```
+
+Promoting from the initial environment (dev) to another environment (prod):
+
+```
+% tranor project-deploy -n myproj -e prod -p dev
+Deploying image... ok
+---- Pulling image to tsuru ----
+v3: Pulling from tsuru/app-myproj-dev
+Digest: sha256:a2d1f38ed30fafd1b6452847e3b63842817265d87b26dd108665c93c2e7f0d9f
+Status: Downloaded newer image for localhost:5000/tsuru/app-myproj-dev:v3
+---- Getting process from image ----
+  ---> Process web found with command: gunicorn --access-logfile - -b 0.0.0.0:$PORT -w 2 abyss.wsgi -k gevent
+---- Pushing image to tsuru ----
+The push refers to a repository [192.168.99.100:5000/tsuru/app-myproj-prod]
+4cb50f5c84bc: Preparing
+af4d412b051e: Preparing
+5ed19e57c425: Preparing
+22518baa7d14: Preparing
+40a3f7f78596: Preparing
+0eac9fd0bf03: Preparing
+02ab82d82f1b: Preparing
+e4c62e08842a: Preparing
+4c57ca702cb9: Preparing
+f2b7c55206b1: Preparing
+ddd02798417c: Preparing
+fcbecd85db47: Preparing
+6cb2a13b80d9: Preparing
+5f70bf18a086: Preparing
+45befd8a8901: Preparing
+0eac9fd0bf03: Waiting
+02ab82d82f1b: Waiting
+e4c62e08842a: Waiting
+4c57ca702cb9: Waiting
+f2b7c55206b1: Waiting
+ddd02798417c: Waiting
+fcbecd85db47: Waiting
+6cb2a13b80d9: Waiting
+5f70bf18a086: Waiting
+45befd8a8901: Waiting
+5ed19e57c425: Mounted from tsuru/app-myproj-dev
+4cb50f5c84bc: Mounted from tsuru/app-myproj-dev
+af4d412b051e: Mounted from tsuru/app-myproj-dev
+22518baa7d14: Mounted from tsuru/app-myproj-dev
+0eac9fd0bf03: Mounted from tsuru/app-myproj-dev
+40a3f7f78596: Mounted from tsuru/app-myproj-dev
+02ab82d82f1b: Mounted from tsuru/app-myproj-dev
+fcbecd85db47: Layer already exists
+f2b7c55206b1: Layer already exists
+ddd02798417c: Layer already exists
+45befd8a8901: Layer already exists
+6cb2a13b80d9: Layer already exists
+4c57ca702cb9: Mounted from tsuru/app-myproj-dev
+5f70bf18a086: Layer already exists
+e4c62e08842a: Mounted from tsuru/app-myproj-dev
+v2: digest: sha256:a2d1f38ed30fafd1b6452847e3b63842817265d87b26dd108665c93c2e7f0d9f size: 3462
+
+---- Starting 1 new unit [web: 1] ----
+ ---> Started unit e09d7ea121 [web]
+
+---- Binding and checking 1 new unit ----
+ ---> Bound and checked unit e09d7ea121 [web]
+
+---- Adding routes to new units ----
+ ---> Added route to unit e09d7ea121 [web]
+
+---- Setting router healthcheck (Path: /) ----
+
+---- Removing routes from old units ----
+ ---> Removed route from unit 71b4c89262 [web]
+
+---- Removing 1 old unit ----
+ ---> Removed old unit 71b4c89262 [web]
+
+---- Unbinding 1 old unit ----
+ ---> Removed bind for old unit 71b4c89262 [web]
+
+OK
+```
+
+Trying to deploy directly to a non-initial environment (prod):
+
+```
+% tranor project-deploy -n myproj -e prod .
+Error: can only deploy directly to "dev", use -p/--promote to deploy to other environments
+% tranor project-deploy -n myproj -e prod -i tsuru/dashboard
+Error: can only deploy directly to "dev", use -p/--promote to deploy to other environments
 ```

@@ -35,7 +35,7 @@ func createApp(client *cmd.Client, opts createAppOptions) (map[string]string, er
 		return nil, err
 	}
 	payload, _ := form.EncodeToString(opts)
-	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(payload))
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func updateApp(client *cmd.Client, opts createAppOptions) error {
 	opts.Name = ""
 	opts.Platform = ""
 	payload, _ := form.EncodeToString(opts)
-	req, err := http.NewRequest("PUT", url, strings.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(payload))
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func deleteApps(apps []app, client *cmd.Client, w io.Writer) ([]error, error) {
 		if err != nil {
 			return nil, err
 		}
-		req, err := http.NewRequest("DELETE", url, nil)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func listApps(client *cmd.Client, filters map[string]string) ([]app, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func setEnvVars(client *cmd.Client, appName string, envVars *api.Envs) error {
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("POST", url, strings.NewReader(v.Encode()))
+	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(v.Encode()))
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func unsetEnvVars(client *cmd.Client, appName string, noRestart bool, envVars []
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func doReq(client *cmd.Client, path string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

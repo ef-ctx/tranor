@@ -5,7 +5,6 @@ os:
   - linux
   - osx
 go:
-  - 1.6.3
   - 1.7.3
   - tip
 env:
@@ -15,8 +14,7 @@ env:
     - GOARCH=amd64
     - GOARCH=386
 script:
-  - go test -coverprofile=coverage.txt -covermode=atomic
-  - ./lint.sh
+  - make lint coverage
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 matrix:

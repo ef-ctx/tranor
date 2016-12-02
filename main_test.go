@@ -212,6 +212,28 @@ func TestProjectEnvVarUnsetIsRegistered(t *testing.T) {
 	}
 }
 
+func TestProjectDeployIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-deploy"]
+	if !ok {
+		t.Error("command deploy not found")
+	}
+	if _, ok := gotCommand.(*projectDeploy); !ok {
+		t.Errorf("command %#v is not of type projectDeploy{}", gotCommand)
+	}
+}
+
+func TestProjectDeployListIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-deploy-list"]
+	if !ok {
+		t.Error("command deploy-list not found")
+	}
+	if _, ok := gotCommand.(*projectDeployList); !ok {
+		t.Errorf("command %#v is not of type projectDeployList{}", gotCommand)
+	}
+}
+
 func TestBuiltinTargetSetIsOverwritten(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["target-set"]

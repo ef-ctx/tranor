@@ -24,12 +24,12 @@ func TestCreateApp(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps",
 		code:    http.StatusOK,
 		payload: []byte(`{"repository_url":"git@example.com:app.git"}`),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,12 +38,12 @@ func TestCreateApp(t *testing.T) {
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
 	app, err := createApp(client, createAppOptions{
-		name:        "app",
-		description: "my nice app",
-		plan:        "medium",
-		platform:    "python",
-		pool:        "mypool",
-		team:        "admin",
+		Name:        "app",
+		Description: "my nice app",
+		Plan:        "medium",
+		Platform:    "python",
+		Pool:        "mypool",
+		Team:        "admin",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -53,7 +53,7 @@ func TestCreateApp(t *testing.T) {
 		t.Errorf("wrong app map returned\nwant %#v\ngot  %#v", expectedApp, app)
 	}
 	req := fakeServer.reqs[0]
-	if req.Method != "POST" {
+	if req.Method != http.MethodPost {
 		t.Errorf("wrong method. Want POST. Got %s", req.Method)
 	}
 	if req.URL.Path != "/1.0/apps" {
@@ -96,12 +96,12 @@ func TestUpdateApp(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "PUT",
+		method:  http.MethodPut,
 		path:    "/apps/myapp",
 		code:    http.StatusOK,
 		payload: []byte(`{"repository_url":"git@example.com:app.git"}`),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,12 +110,12 @@ func TestUpdateApp(t *testing.T) {
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
 	err = updateApp(client, createAppOptions{
-		name:        "myapp",
-		description: "my nice app - updated!",
-		plan:        "medium",
-		platform:    "",
-		pool:        "mypool",
-		team:        "admin",
+		Name:        "myapp",
+		Description: "my nice app - updated!",
+		Plan:        "medium",
+		Platform:    "",
+		Pool:        "mypool",
+		Team:        "admin",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -141,12 +141,12 @@ func TestUpdateAppNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "PUT",
+		method:  http.MethodPut,
 		path:    "/apps/myapp",
 		code:    http.StatusNotFound,
 		payload: []byte("app not found"),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,12 +155,12 @@ func TestUpdateAppNotFound(t *testing.T) {
 	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
 	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
 	err = updateApp(client, createAppOptions{
-		name:        "myapp",
-		description: "my nice app - updated!",
-		plan:        "medium",
-		platform:    "",
-		pool:        "mypool",
-		team:        "admin",
+		Name:        "myapp",
+		Description: "my nice app - updated!",
+		Plan:        "medium",
+		Platform:    "",
+		Pool:        "mypool",
+		Team:        "admin",
 	})
 	if err == nil {
 		t.Fatal("unexpected <nil> error")
@@ -184,16 +184,16 @@ func TestDeleteApps(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "DELETE",
+		method: http.MethodDelete,
 		path:   "/apps/proj1-dev",
 		code:   http.StatusOK,
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method: "DELETE",
+		method: http.MethodDelete,
 		path:   "/apps/proj1-prod",
 		code:   http.StatusOK,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +215,7 @@ func TestDeleteApps(t *testing.T) {
 	}
 	paths := []string{"/1.0/apps/proj1-dev", "/1.0/apps/proj1-qa", "/1.0/apps/proj1-prod"}
 	for i, req := range fakeServer.reqs {
-		if req.Method != "DELETE" {
+		if req.Method != http.MethodDelete {
 			t.Errorf("wrong method. Want DELETE. Got %s", req.Method)
 		}
 		if req.URL.Path != paths[i] {
@@ -251,18 +251,18 @@ func TestListApps(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps?",
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps",
 		code:    http.StatusOK,
 		payload: []byte(listOfApps),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -298,16 +298,16 @@ func TestListAppsEmpty(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/apps?",
 		code:   http.StatusNoContent,
 	})
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/apps",
 		code:   http.StatusNoContent,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -344,12 +344,12 @@ func TestLastDeploy(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/deploys?limit=1&app=myapp",
 		code:    http.StatusOK,
 		payload: []byte(deployments),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -376,11 +376,11 @@ func TestLastDeployEmpty(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/deploys?limit=1&app=myapp",
 		code:   http.StatusNoContent,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -414,12 +414,12 @@ func TestGetApp(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps/proj3-prod",
 		code:    http.StatusOK,
-		payload: []byte(appInfo6),
+		payload: []byte(appInfo2),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -432,7 +432,7 @@ func TestGetApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	var expectedApp app
-	err = json.Unmarshal([]byte(appInfo6), &expectedApp)
+	err = json.Unmarshal([]byte(appInfo2), &expectedApp)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -445,11 +445,11 @@ func TestGetAppNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
-		method: "GET",
+		method: http.MethodGet,
 		path:   "/apps/proj1-prod",
 		code:   http.StatusNotFound,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -484,11 +484,11 @@ func TestSetEnvVars(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		code:    http.StatusOK,
-		method:  "POST",
+		method:  http.MethodPost,
 		path:    "/apps/proj1-prod/env",
 		payload: []byte("{}"),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -530,7 +530,7 @@ func TestSetEnvVars(t *testing.T) {
 func TestSetEnvVarsNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -566,11 +566,11 @@ func TestGetEnvVars(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		code:    http.StatusOK,
-		method:  "GET",
+		method:  http.MethodGet,
 		path:    "/apps/proj1-prod/env",
 		payload: []byte(`[{"name":"USER_NAME","value":"root","public":true},{"name":"USER_PASSWORD","value":"r00t","public":false}]`),
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -601,7 +601,7 @@ func TestGetEnvVars(t *testing.T) {
 func TestGetEnvVarsNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -643,12 +643,12 @@ func TestUnsetEnvVars(t *testing.T) {
 	defer fakeServer.stop()
 	fakeServer.prepareResponse(preparedResponse{
 		code:     http.StatusOK,
-		method:   "DELETE",
+		method:   http.MethodDelete,
 		path:     "/apps/proj1-prod/env",
 		payload:  []byte("{}"),
 		ignoreQS: true,
 	})
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -673,7 +673,7 @@ func TestUnsetEnvVars(t *testing.T) {
 func TestUnsetEnvVarsNotFound(t *testing.T) {
 	fakeServer := newFakeServer(t)
 	defer fakeServer.stop()
-	cleanup, err := setupFakeTarget(fakeServer.url())
+	cleanup, err := setupFakeConfig(fakeServer.url(), "")
 	if err != nil {
 		t.Fatal(err)
 	}

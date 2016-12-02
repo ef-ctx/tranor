@@ -17,13 +17,15 @@ commands below should get tranor up and running:
 % tranor target-set <remote-tranor-config-server>
 ```
 
-The config server is an HTTP endpoint that contains the Tsuru target server and
-the list of environment names and DNS suffixes, in the following format:
+The config server is an HTTP endpoint that contains the Tsuru target server,
+the Docker registry used by the tsuru setup and the list of environment names
+and DNS suffixes, in the following format:
 
 
 ```json
 {
 	"target": "http://tsuru.example.com",
+	"registry": "docker-registry.example.com",
 	"envs": [
 		{
 			"name": "dev",
@@ -47,13 +49,26 @@ For more details and some terminal session examples, check the
 ##Contributing and running tests
 
 Contributions are welcome! In order to run tests locally, you need to be have
-Go 1.6+ (or 1.5 with GO15VENDOREXPERIMENT on) and run:
+Go 1.7+ and run:
 
 ```
 % go test
 ```
 
-You can also get a coverage report with the `-cover` flag:
+You can run integration tests against a real tsuru server. The test suite
+assumes that the platform ``python`` is available, as well as the pools
+``dev\dev.example.com``, ``qa\qa.example.com``, ``stage\stage.example.com`` and
+``prod\example.com``, the plan ``medium`` and the team ``myteam``. Having all
+requirements satisfied, one can run:
+
+```
+% TSURU_TEST_HOST=<tsuru-server> TSURU_TEST_TOKEN=<token-value> make integration
+```
+
+You can get the value of TSURU_TEST_HOST with the command ``tsuru target-list``
+and the value of TSURU_TEST_TOKEN with the command ``tsuru token-show``.
+
+You can also enable coverage report with the `-cover` flag:
 
 ```
 % go test -cover

@@ -19,6 +19,7 @@ const listOfApps = `[
   {
     "name": "proj2-dev",
     "cname": [
+      "proj2-dev.dev.example.com",
       "proj2.dev.example.com"
     ],
     "ip": "proj2-dev.192.168.50.4.nip.io",

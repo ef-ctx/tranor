@@ -276,7 +276,7 @@ func TestListApps(t *testing.T) {
 	}
 	expectedApps := []app{
 		{Name: "tsuru-dashboard", CName: []string{}},
-		{Name: "proj2-dev", CName: []string{"proj2.dev.example.com"}},
+		{Name: "proj2-dev", CName: []string{"proj2-dev.dev.example.com", "proj2.dev.example.com"}},
 		{Name: "proj2-qa", CName: []string{"proj2.qa.example.com"}},
 		{Name: "proj2-stage", CName: []string{"proj2.stage.example.com"}},
 		{Name: "proj2-prod", CName: []string{"proj2.example.com"}},

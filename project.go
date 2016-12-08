@@ -462,12 +462,12 @@ func (c *projectList) Run(ctx *cmd.Context, client *cmd.Client) error {
 	projects := make(map[string][]app)
 	for _, env := range config.Environments {
 		for _, app := range apps {
-			if len(app.CName) != 1 {
+			if len(app.CName) < 1 {
 				continue
 			}
-			if projectName, err := extractProjectName(app, env); err == nil {
+			if projectName, cname, err := extractProjectName(app, env); err == nil {
 				app.Env = env
-				app.Addr = app.CName[0]
+				app.Addr = cname
 				projects[projectName] = append(projects[projectName], app)
 			}
 		}
@@ -531,24 +531,31 @@ func createApps(envs []Environment, client *cmd.Client, projectName string, opts
 
 func setCNames(apps []map[string]string, client *cmd.Client, projectName string) error {
 	for _, app := range apps {
-		reqURL, err := cmd.GetURL(fmt.Sprintf("/apps/%s/cname", app["name"]))
+		err := setCName(app["name"], fmt.Sprintf("%s.%s", projectName, app["dnsSuffix"]), client)
 		if err != nil {
 			return err
 		}
-		cname := fmt.Sprintf("%s.%s", projectName, app["dnsSuffix"])
-		v := make(url.Values)
-		v.Set("cname", cname)
-		req, err := http.NewRequest(http.MethodPost, reqURL, strings.NewReader(v.Encode()))
-		if err != nil {
-			return err
-		}
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-		resp.Body.Close()
 	}
+	return nil
+}
+
+func setCName(appName, cname string, client *cmd.Client) error {
+	reqURL, err := cmd.GetURL(fmt.Sprintf("/apps/%s/cname", appName))
+	if err != nil {
+		return err
+	}
+	v := make(url.Values)
+	v.Set("cname", cname)
+	req, err := http.NewRequest(http.MethodPost, reqURL, strings.NewReader(v.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 	return nil
 }
 
@@ -564,10 +571,10 @@ func projectApps(client *cmd.Client, name string) ([]app, error) {
 	var projectApps []app
 	for _, env := range config.Environments {
 		for _, app := range apps {
-			if len(app.CName) != 1 {
+			if len(app.CName) < 1 {
 				continue
 			}
-			projectName, err := extractProjectName(app, env)
+			projectName, cname, err := extractProjectName(app, env)
 			if err != nil {
 				continue
 			}
@@ -576,7 +583,7 @@ func projectApps(client *cmd.Client, name string) ([]app, error) {
 				if err != nil {
 					return nil, err
 				}
-				app.Addr = app.CName[0]
+				app.Addr = cname
 				app.Env = env
 				projectApps = append(projectApps, app)
 			}
@@ -601,13 +608,26 @@ func getEnvironmentsByName(envs []Environment, names []string) []Environment {
 	return filtered
 }
 
-func extractProjectName(a app, env Environment) (string, error) {
+func extractProjectName(a app, env Environment) (projectName string, cname string, err error) {
 	partsName := env.nameRegexp().FindStringSubmatch(a.Name)
-	partsDNS := env.dnsRegexp().FindStringSubmatch(a.CName[0])
-	if len(partsName) == 2 && len(partsDNS) == 2 && partsName[1] == partsDNS[1] {
-		return partsDNS[1], nil
+	cname, err = findCName(a, env)
+	if err != nil {
+		return "", "", err
 	}
-	return "", errors.New("not a tranor project")
+	partsDNS := env.dnsRegexp().FindStringSubmatch(cname)
+	if len(partsName) == 2 && len(partsDNS) == 2 && partsName[1] == partsDNS[1] {
+		return partsDNS[1], cname, nil
+	}
+	return "", "", errors.New("not a tranor project")
+}
+
+func findCName(a app, env Environment) (string, error) {
+	for _, cname := range a.CName {
+		if env.dnsRegexp().MatchString(cname) {
+			return cname, nil
+		}
+	}
+	return "", errors.New("cname not defined")
 }
 
 type projectSlice []struct {

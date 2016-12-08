@@ -212,7 +212,15 @@ func TestProjectUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = setCName(appMaps[0]["name"], "some-cname.example.com", client)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = setCNames(appMaps, client, "myproj")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = setCName(appMaps[0]["name"], "another-cname.example.com", client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -779,6 +787,10 @@ func TestProjectList(t *testing.T) {
 		Team:        "myteam",
 		Platform:    "python",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = setCName(appMaps[0]["name"], "some-cname.example.com", client)
 	if err != nil {
 		t.Fatal(err)
 	}

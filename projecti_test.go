@@ -685,6 +685,63 @@ Team owner: myteam`+"\n\n", a.RepositoryURL, strings.Join(a.Teams, ", "), a.Owne
 	}
 }
 
+func TestProjectInfoWithDash(t *testing.T) {
+	tsuruServer.reset()
+	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	ctx := cmd.Context{Stdout: &stdout, Stderr: &stderr}
+	client := cmd.NewClient(http.DefaultClient, &ctx, &cmd.Manager{})
+	config, _ := loadConfigFile()
+	appMaps, err := createApps(config.Environments, client, "my-proj1", createAppOptions{
+		Plan:        "medium",
+		Description: "my nice project",
+		Team:        "myteam",
+		Platform:    "python",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = setCNames(appMaps, client, "my-proj1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var c projectInfo
+	err = c.Flags().Parse(true, []string{"-n", "my-proj1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.Run(&ctx, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, _ := getApp(client, "my-proj1-dev")
+	table := cmd.Table{Headers: cmd.Row([]string{"Environment", "Address", "Image", "Git hash/tag", "Deploy date", "Units"})}
+	expectedOutput := fmt.Sprintf(`Project name: my-proj1
+Description: my nice project
+Repository: %s
+Platform: python
+Teams: %s
+Owner: %s
+Team owner: myteam`+"\n\n", a.RepositoryURL, strings.Join(a.Teams, ", "), a.Owner)
+	rows := []cmd.Row{
+		{"dev", "my-proj1.dev.example.com", "", "", "", "0"},
+		{"qa", "my-proj1.qa.example.com", "", "", "", "0"},
+		{"stage", "my-proj1.stage.example.com", "", "", "", "0"},
+		{"prod", "my-proj1.example.com", "", "", "", "0"},
+	}
+	for _, row := range rows {
+		table.AddRow(row)
+	}
+	expectedOutput += table.String()
+	if stdout.String() != expectedOutput {
+		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())
+	}
+}
+
 func TestProjectInfoNotFound(t *testing.T) {
 	tsuruServer.reset()
 	cleanup, err := setupFakeConfig(tsuruServer.url(), tsuruServer.token())
@@ -781,7 +838,7 @@ func TestProjectList(t *testing.T) {
 	appMaps, err := createApps([]Environment{
 		{Name: "dev", DNSSuffix: "dev.example.com"},
 		{Name: "prod", DNSSuffix: "example.com"},
-	}, client, "myproj3", createAppOptions{
+	}, client, "my-proj3", createAppOptions{
 		Plan:        "medium",
 		Description: "my nice project",
 		Team:        "myteam",
@@ -794,7 +851,7 @@ func TestProjectList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = setCNames(appMaps, client, "myproj3")
+	err = setCNames(appMaps, client, "my-proj3")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -803,22 +860,22 @@ func TestProjectList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedOutput := `+---------+--------------+---------------------------+
-| Project | Environments | Address                   |
-+---------+--------------+---------------------------+
-| myproj1 | dev          | myproj1.dev.example.com   |
-|         | qa           | myproj1.qa.example.com    |
-|         | stage        | myproj1.stage.example.com |
-|         | prod         | myproj1.example.com       |
-+---------+--------------+---------------------------+
-| myproj2 | dev          | myproj2.dev.example.com   |
-|         | qa           | myproj2.qa.example.com    |
-|         | stage        | myproj2.stage.example.com |
-|         | prod         | myproj2.example.com       |
-+---------+--------------+---------------------------+
-| myproj3 | dev          | myproj3.dev.example.com   |
-|         | prod         | myproj3.example.com       |
-+---------+--------------+---------------------------+
+	expectedOutput := `+----------+--------------+---------------------------+
+| Project  | Environments | Address                   |
++----------+--------------+---------------------------+
+| my-proj3 | dev          | my-proj3.dev.example.com  |
+|          | prod         | my-proj3.example.com      |
++----------+--------------+---------------------------+
+| myproj1  | dev          | myproj1.dev.example.com   |
+|          | qa           | myproj1.qa.example.com    |
+|          | stage        | myproj1.stage.example.com |
+|          | prod         | myproj1.example.com       |
++----------+--------------+---------------------------+
+| myproj2  | dev          | myproj2.dev.example.com   |
+|          | qa           | myproj2.qa.example.com    |
+|          | stage        | myproj2.stage.example.com |
+|          | prod         | myproj2.example.com       |
++----------+--------------+---------------------------+
 `
 	if stdout.String() != expectedOutput {
 		t.Errorf("wrong output\nWant:\n%s\nGot:\n%s", expectedOutput, stdout.String())

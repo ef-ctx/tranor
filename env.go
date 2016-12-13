@@ -83,14 +83,14 @@ func (e *Environment) poolName() string {
 
 func (e *Environment) nameRegexp() *regexp.Regexp {
 	if e.namer == nil {
-		e.namer = regexp.MustCompile("^([^-]+)-" + e.Name + "$")
+		e.namer = regexp.MustCompile("^(.+)-" + e.Name + "$")
 	}
 	return e.namer
 }
 
 func (e *Environment) dnsRegexp() *regexp.Regexp {
 	if e.dnsr == nil {
-		e.dnsr = regexp.MustCompile(`^([^-]+)\.` + e.DNSSuffix + "$")
+		e.dnsr = regexp.MustCompile(`^([^.]+)\.` + e.DNSSuffix + "$")
 	}
 	return e.dnsr
 }

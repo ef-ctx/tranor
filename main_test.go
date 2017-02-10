@@ -234,6 +234,17 @@ func TestProjectDeployListIsRegistered(t *testing.T) {
 	}
 }
 
+func TestProjectLogIsRegistered(t *testing.T) {
+	manager := buildManager("tranor")
+	gotCommand, ok := manager.Commands["project-log"]
+	if !ok {
+		t.Error("command project-log not found")
+	}
+	if _, ok := gotCommand.(*projectLog); !ok {
+		t.Errorf("command %#v is not of type projectLog{}", gotCommand)
+	}
+}
+
 func TestBuiltinTargetSetIsOverwritten(t *testing.T) {
 	manager := buildManager("tranor")
 	gotCommand, ok := manager.Commands["target-set"]

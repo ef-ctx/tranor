@@ -214,7 +214,7 @@ const appInfo1 = `{
     "router": "hipache"
   },
   "platform": "python",
-  "pool": "dev\\dev.example.com",
+  "pool": "dev,dev.example.com",
   "repository": "git@example.com:proj3-dev.git",
   "teamowner": "admin",
   "teams": [
@@ -254,7 +254,7 @@ const appInfo2 = `{
     "router": "hipache"
   },
   "platform": "python",
-  "pool": "prod\\prod.example.com",
+  "pool": "prod,prod.example.com",
   "repository": "git@example.com:proj3-prod.git",
   "teamowner": "admin",
   "teams": [

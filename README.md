@@ -46,7 +46,7 @@ and DNS suffixes, in the following format:
 For more details and some terminal session examples, check the
 [usage.md](https://github.com/ef-ctx/tranor/blob/master/usage.md) page.
 
-##Contributing and running tests
+## Contributing and running tests
 
 Contributions are welcome! In order to run tests locally, you need to be have
 Go 1.7+ and run:

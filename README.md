@@ -1,4 +1,4 @@
-#tranor
+# tranor
 
 [![Build Status](https://travis-ci.org/ef-ctx/tranor.svg?branch=master)](https://travis-ci.org/ef-ctx/tranor)
 [![codecov](https://codecov.io/gh/ef-ctx/tranor/branch/master/graph/badge.svg)](https://codecov.io/gh/ef-ctx/tranor)
@@ -6,7 +6,7 @@
 
 Plugin which adds the "environment" concept (eg. dev, QA, prod) to Tsuru PaaS.
 
-##Using
+## Using
 
 In order to use tranor, one needs to install and configure it. Assuming that
 [Go is installed and configured](https://golang.org/doc/install), the two

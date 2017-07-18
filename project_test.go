@@ -20,8 +20,7 @@ import (
 )
 
 func TestCommaSeparatedFlag(t *testing.T) {
-	var value gnuflag.Value
-	value = &commaSeparatedFlag{}
+	value := gnuflag.Value(&commaSeparatedFlag{})
 	input := "dev,qa,staging,prod"
 	err := value.Set(input)
 	if err != nil {

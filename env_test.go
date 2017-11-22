@@ -269,11 +269,11 @@ func TestEnvironmentPoolName(t *testing.T) {
 	}{
 		{
 			Environment{Name: "dev", DNSSuffix: "dev.example.com"},
-			`dev\dev.example.com`,
+			"dev-dev.example.com",
 		},
 		{
 			Environment{Name: "qa", DNSSuffix: "whatever"},
-			`qa\whatever`,
+			"qa-whatever",
 		},
 	}
 	for _, test := range tests {

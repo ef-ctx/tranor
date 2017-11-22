@@ -57,8 +57,8 @@ Go 1.7+ and run:
 
 You can run integration tests against a real tsuru server. The test suite
 assumes that the platform ``python`` is available, as well as the pools
-``dev\dev.example.com``, ``qa\qa.example.com``, ``stage\stage.example.com`` and
-``prod\example.com``, the plan ``medium`` and the team ``myteam``. Having all
+``dev-dev.example.com``, ``qa-qa.example.com``, ``stage-stage.example.com`` and
+``prod-example.com``, the plan ``medium`` and the team ``myteam``. Having all
 requirements satisfied, one can run:
 
 ```

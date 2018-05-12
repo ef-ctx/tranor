@@ -206,7 +206,7 @@ Address: myproj.dev.example.com, myproj-dev.192.168.99.100.nip.io
 Owner: admin@example.com
 Team owner: admin
 Deploys: 0
-Pool: dev\dev.example.com
+Pool: dev-dev.example.com
 Quota: 0/4 units
 
 App Plan:

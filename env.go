@@ -78,7 +78,7 @@ type Environment struct {
 }
 
 func (e *Environment) poolName() string {
-	return fmt.Sprintf(`%s\%s`, e.Name, e.DNSSuffix)
+	return fmt.Sprintf("%s-%s", e.Name, e.DNSSuffix)
 }
 
 func (e *Environment) nameRegexp() *regexp.Regexp {

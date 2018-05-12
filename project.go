@@ -384,11 +384,11 @@ func (c *projectInfo) Run(ctx *cmd.Context, client *cmd.Client) error {
 	envs.Headers = cmd.Row{"Environment", "Address", "Image", "Git hash/tag", "Deploy date", "Units"}
 	for _, app := range apps {
 		row := cmd.Row{app.Env.Name, app.Addr, "", "", "", strconv.Itoa(len(app.Units))}
-		if deploy, err := lastDeploy(client, app.Name); err == nil && deploy.Image != "" {
-			row[2] = deploy.Image
-			row[4] = deploy.Timestamp.Format(time.RFC1123)
-			if deploy.Commit != "" {
-				row[3] = fmt.Sprintf("(git) %s", deploy.Commit)
+		if appDeploy, err := lastDeploy(client, app.Name); err == nil && appDeploy.Image != "" {
+			row[2] = appDeploy.Image
+			row[4] = appDeploy.Timestamp.Format(time.RFC1123)
+			if appDeploy.Commit != "" {
+				row[3] = fmt.Sprintf("(git) %s", appDeploy.Commit)
 			}
 		}
 		envs.AddRow(row)

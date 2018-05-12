@@ -7,10 +7,10 @@ all: test
 test: lint gotest
 
 lint:
-	go get github.com/alecthomas/gometalinter honnef.co/go/unused/cmd/unused
+	go get github.com/alecthomas/gometalinter
 	gometalinter --install --vendored-linters
-	go install ./...
-	gometalinter -j 2 --enable=misspell --enable=gofmt --enable=unused --disable=dupl --disable=errcheck --disable=gas --disable=interfacer --disable=gocyclo --deadline=10m --tests --vendor ./...
+	go build -i
+	gometalinter -j 2 --fast --disable=gocyclo --disable=gas --deadline=10m --tests --vendor ./...
 
 gotest:
 	go test

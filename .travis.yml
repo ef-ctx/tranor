@@ -5,8 +5,8 @@ os:
   - linux
   - osx
 go:
-  - 1.7.x
-  - 1.8rc3
+  - 1.9.x
+  - 1.10.x
   - tip
 env:
   matrix:

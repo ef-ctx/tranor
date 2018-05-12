@@ -465,7 +465,7 @@ func (c *projectList) Run(ctx *cmd.Context, client *cmd.Client) error {
 			if len(app.CName) < 1 {
 				continue
 			}
-			if projectName, cname, err := extractProjectName(app, env); err == nil {
+			if projectName, cname, err := extractProjectName(app, env); err == nil && app.Pool == env.poolName() {
 				app.Env = env
 				app.Addr = cname
 				projects[projectName] = append(projects[projectName], app)
